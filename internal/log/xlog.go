@@ -1,13 +1,11 @@
 package log
 
 import (
-	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
-var _ internal.XLog = (*xlog)(nil)
+var _ internal.ILog = (*xlog)(nil)
 
 type xlog struct {
 	zl *zap.Logger
@@ -41,33 +39,22 @@ func (log *xlog) Fatal(msg string, fields ...internal.Field) {
 	log.zl.Fatal(msg, fields...)
 }
 
-func (log *xlog) With(fields ...zap.Field) internal.XLog {
+func (log *xlog) With(fields ...zap.Field) internal.ILog {
 	return &xlog{log.zl.With(fields...)}
 }
 
-func (log *xlog) Named(s string) internal.XLog {
+func (log *xlog) Named(s string) internal.ILog {
 	return &xlog{log.zl.Named(s).With(zap.Namespace(s))}
 }
 
-func GetDevLog() internal.XLog {
-	cfg := zap.NewDevelopmentConfig()
-	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	return &xlog{xerror.PanicErr(cfg.Build()).(*zap.Logger)}
+func (log *xlog) GetZap() *zap.Logger {
+	return log.zl
 }
 
-var defaultLog = &xlog{}
+type XLog = xlog
 
-func GetLog() internal.XLog {
-	if defaultLog.zl == nil {
-		panic("please init xlog config")
-	}
-	return defaultLog
-}
-
-func SetLog(lg *zap.Logger) {
-	defaultLog.zl = lg
-}
-
-func Sync(ll internal.XLog) error {
-	return ll.(*xlog).zl.Sync()
+func NewXLog(zl *zap.Logger) *XLog {
+	xl := &XLog{}
+	xl.zl = zl
+	return xl
 }

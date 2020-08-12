@@ -545,6 +545,12 @@ github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084/go.mod h1:TjEm7z
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
 github.com/prometheus/procfs v0.0.3/go.mod h1:4A/X28fw3Fc593LaREMrKMqOKvUAntwMDaekg4FpcdQ=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
+github.com/pubgo/dix v0.0.2 h1:2tJJUDFVaJ9dgdg9FQT5WOwhdljYJQeaUSb2koy6Ibo=
+github.com/pubgo/dix v0.0.2/go.mod h1:vQ+Wkn4CPr5DQhh4Brj5YZPThQx6zebaGADOV3Y4mTU=
+github.com/pubgo/dix v0.0.3 h1:9mkLUOtCnAYTy4wtQUlq6iqrKyxLa7glVAThZxXaP94=
+github.com/pubgo/dix v0.0.3/go.mod h1:vQ+Wkn4CPr5DQhh4Brj5YZPThQx6zebaGADOV3Y4mTU=
+github.com/pubgo/dix v0.0.4 h1:poAMrxxxBXKKh0R6jCR/jI7WLa8O7h9PY5K/YDsKvpk=
+github.com/pubgo/dix v0.0.4/go.mod h1:vQ+Wkn4CPr5DQhh4Brj5YZPThQx6zebaGADOV3Y4mTU=
 github.com/pubgo/errors v0.3.13/go.mod h1:dkZMgoIg3ZZMo5QxUqsutqt0jrWAn8V3x5mbfmG1Et8=
 github.com/pubgo/g v0.2.52/go.mod h1:2+0TxMTOOenLx/imaAo//hBInOhnE5T04msyYICR/J4=
 github.com/pubgo/schema v0.0.3/go.mod h1:e8SCXfgwde8aYI64tC+L/NHAutcBgGeHI7Le96EZQ78=

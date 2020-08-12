@@ -2,6 +2,8 @@ package xlog_config
 
 import (
 	"encoding/json"
+	"github.com/pubgo/xlog/internal"
+	"github.com/pubgo/xlog/internal/log_default"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -95,28 +97,77 @@ func (t config) toZapLogger() (_ *zap.Logger, err error) {
 type Option func(opts *config)
 
 func InitFromOption(opts ...Option) (err error) {
+	zl, err := newFromOption(opts...)
+	if err != nil {
+		return err
+	}
+	log_default.SetDefaultZapLog(zl)
+	return nil
+}
+
+func NewFromOption(opts ...Option) (_ internal.ILog, err error) {
+	zl, err := newFromOption(opts...)
+	if err != nil {
+		return nil, err
+	}
+	return log.NewXLog(zl), nil
+}
+
+func newFromOption(opts ...Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
 
 	cfg := config(NewProdConfig())
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	log.SetLog(xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger))
-	return
+
+	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
 }
 
 func InitFromConfig(conf Config, opts ...Option) (err error) {
-	defer xerror.RespErr(&err)
+	zl, err := newFromConfig(conf, opts...)
+	if err != nil {
+		return err
+	}
+	log_default.SetDefaultZapLog(zl)
+	return nil
+}
 
+func NewFromConfig(conf Config, opts ...Option) (_ internal.ILog, err error) {
+	zl, err := newFromConfig(conf, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return log.NewXLog(zl), nil
+}
+
+func newFromConfig(conf Config, opts ...Option) (_ *zap.Logger, err error) {
+	defer xerror.RespErr(&err)
 	cfg := config(conf)
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	log.SetLog(xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger))
-	return
+	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
 }
 
 func InitFromJson(conf []byte, opts ...Option) (err error) {
+	zl, err := newFromJson(conf, opts...)
+	if err != nil {
+		return err
+	}
+	log_default.SetDefaultZapLog(zl)
+	return nil
+}
+
+func NewFromJson(conf []byte, opts ...Option) (_ internal.ILog, err error) {
+	zl, err := newFromJson(conf, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return log.NewXLog(zl), nil
+}
+
+func newFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
 
 	var cfg config
@@ -126,8 +177,7 @@ func InitFromJson(conf []byte, opts ...Option) (err error) {
 		opt(&cfg)
 	}
 
-	log.SetLog(xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger))
-	return
+	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
 }
 
 func NewDevConfig() Config {

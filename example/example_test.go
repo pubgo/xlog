@@ -1,45 +1,43 @@
 package example_test
 
 import (
+	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
+	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/xlog_config"
 	"testing"
+	"time"
 )
 
-var fields = xlog.FieldOf(
-	xlog.String("key", "value"),
-)
-var log = xlog.GetDevLog().With(fields...)
+var log = xlog.GetDevLog()
 
 func init() {
-	//initCfgFromJson()
-	initCfgFromJsonDebug()
-	log = xlog.GetLog().
-		Named("service").With(fields...).
-		Named("hello").With(fields...).
-		Named("world").With(fields...)
+	xerror.Exit(dix.Dix(func(log1 *xlog.XLog) {
+		log = log1.
+			Named("service").With(xlog.String("key", "value1")).
+			Named("hello").With(xlog.String("key", "value2")).
+			Named("world").With(xlog.String("key", "value3"))
+	}))
 }
 
 func TestExample(t *testing.T) {
-	log.Debug("hello",
-		xlog.Any("hss", "ss"),
-	)
+	for {
+		//fmt.Println(dix.Graph())
 
-	log.Info("hello",
-		xlog.Any("hss", "ss"),
-	)
+		log.Debug("hello",
+			xlog.Any("hss", "ss"),
+		)
 
-	log.Error("hello",
-		xlog.Any("hss", "ss"),
-	)
-
-	log.Info("hello",
-		xlog.Any("hss", "ss"),
-	)
+		log.Info("hello",
+			xlog.Any("hss", "ss"),
+		)
+		time.Sleep(time.Second)
+		xerror.Exit(dix.Dix(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05"))))
+	}
 }
 
-func initCfgFromJsonDebug() {
+func initCfgFromJsonDebug(name string) internal.ILog {
 	cfg := `{
         "level": "debug",
         "development": true,
@@ -69,7 +67,10 @@ func initCfgFromJsonDebug() {
         ],
         "initialFields": null
 }`
-	xerror.Exit(xlog_config.InitFromJson(
+
+	xx, err := xlog_config.NewFromJson(
 		[]byte(cfg),
-	))
+	)
+	xerror.Exit(err)
+	return xx.Named(name)
 }
