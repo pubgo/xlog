@@ -23,7 +23,15 @@ func GetLog() internal.ILog {
 }
 
 func Sync(ll internal.ILog) error {
-	return log_default.Sync(ll)
+	xl, ok := ll.(*log.XLog)
+	if !ok {
+		return xerror.New("params is should be log.ILog type")
+	}
+	if xl == nil {
+		return xerror.New("params is should not be nil")
+	}
+
+	return xl.GetZap().Sync()
 }
 
 func defaultLog() internal.ILog {

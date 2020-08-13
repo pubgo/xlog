@@ -35,14 +35,3 @@ func GetDevLog() internal.ILog {
 	return log.NewXLog(getDevLog())
 }
 
-func Sync(ll internal.ILog) error {
-	xl, ok := ll.(*log.XLog)
-	if !ok {
-		return xerror.New("params is should be log.ILog type")
-	}
-	if xl == nil {
-		return xerror.New("params is should not be nil")
-	}
-
-	return xl.GetZap().Sync()
-}
