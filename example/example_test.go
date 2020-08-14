@@ -1,7 +1,6 @@
 package example_test
 
 import (
-	"fmt"
 	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
@@ -24,8 +23,6 @@ func init() {
 
 func TestExample(t *testing.T) {
 	for {
-		//fmt.Println(dix.Graph())
-
 		log.Debug("hello",
 			xlog.Any("hss", "ss"),
 		)
@@ -34,7 +31,7 @@ func TestExample(t *testing.T) {
 			xlog.Any("hss", "ss"),
 		)
 		time.Sleep(time.Second)
-		fmt.Println(dix.Graph())
+		//fmt.Println(dix.Graph())
 		dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
 	}
 }
