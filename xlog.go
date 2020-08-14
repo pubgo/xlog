@@ -10,22 +10,21 @@ import (
 	"go.uber.org/zap"
 )
 
-type XLog = log.XLog
-type ILog = internal.ILog
+type XLog = internal.XLog
 type Field = zap.Field
 
-func GetDevLog() internal.ILog {
+func GetDevLog() internal.XLog {
 	return log_default.GetDevLog()
 }
 
-func GetLog() internal.ILog {
+func GetLog() internal.XLog {
 	return log_default.GetLog()
 }
 
-func Sync(ll internal.ILog) error {
+func Sync(ll internal.XLog) error {
 	xl, ok := ll.(*log.XLog)
 	if !ok {
-		return xerror.New("params is should be log.ILog type")
+		return xerror.New("params is should be log.XLog type")
 	}
 	if xl == nil {
 		return xerror.New("params is should not be nil")
@@ -34,7 +33,7 @@ func Sync(ll internal.ILog) error {
 	return xl.GetZap().Sync()
 }
 
-func defaultLog() internal.ILog {
+func defaultLog() internal.XLog {
 	return log_default.GetLog()
 }
 
@@ -93,11 +92,11 @@ func FatalF(format string, a ...interface{}) {
 	defaultLog().Fatal(fmt.Sprintf(format, a...))
 }
 
-func With(fields ...zap.Field) internal.ILog {
+func With(fields ...zap.Field) internal.XLog {
 	return defaultLog().With(fields...)
 }
 
-func Named(s string) internal.ILog {
+func Named(s string) internal.XLog {
 	return defaultLog().Named(s).With(zap.Namespace(s))
 }
 

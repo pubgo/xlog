@@ -1,14 +1,44 @@
 package log
 
 import (
-	"github.com/pubgo/xlog/internal"
+	"fmt"
 	"go.uber.org/zap"
+
+	"github.com/pubgo/xlog/internal"
 )
 
-var _ internal.ILog = (*xlog)(nil)
+var _ internal.XLog = (*xlog)(nil)
 
 type xlog struct {
 	zl *zap.Logger
+}
+
+func (log *xlog) DebugF(format string, a ...interface{}) {
+	log.zl.Debug(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) InfoF(format string, a ...interface{}) {
+	log.zl.Info(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) WarnF(format string, a ...interface{}) {
+	log.zl.Warn(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) ErrorF(format string, a ...interface{}) {
+	log.zl.Error(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) DPanicF(format string, a ...interface{}) {
+	log.zl.DPanic(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) PanicF(format string, a ...interface{}) {
+	log.zl.Panic(fmt.Sprintf(format, a...))
+}
+
+func (log *xlog) FatalF(format string, a ...interface{}) {
+	log.zl.Fatal(fmt.Sprintf(format, a...))
 }
 
 func (log *xlog) Debug(msg string, fields ...internal.Field) {
@@ -39,22 +69,14 @@ func (log *xlog) Fatal(msg string, fields ...internal.Field) {
 	log.zl.Fatal(msg, fields...)
 }
 
-func (log *xlog) With(fields ...zap.Field) internal.ILog {
+func (log *xlog) With(fields ...zap.Field) internal.XLog {
 	return &xlog{log.zl.With(fields...)}
 }
 
-func (log *xlog) Named(s string) internal.ILog {
+func (log *xlog) Named(s string) internal.XLog {
 	return &xlog{log.zl.Named(s).With(zap.Namespace(s))}
 }
 
 func (log *xlog) GetZap() *zap.Logger {
 	return log.zl
-}
-
-type XLog = xlog
-
-func NewXLog(zl *zap.Logger) *XLog {
-	xl := &XLog{}
-	xl.zl = zl
-	return xl
 }

@@ -105,7 +105,7 @@ func InitFromOption(opts ...Option) (err error) {
 	return nil
 }
 
-func NewFromOption(opts ...Option) (_ internal.ILog, err error) {
+func NewFromOption(opts ...Option) (_ internal.XLog, err error) {
 	zl, err := newFromOption(opts...)
 	if err != nil {
 		return nil, err
@@ -133,7 +133,7 @@ func InitFromConfig(conf Config, opts ...Option) (err error) {
 	return nil
 }
 
-func NewFromConfig(conf Config, opts ...Option) (_ internal.ILog, err error) {
+func NewFromConfig(conf Config, opts ...Option) (_ internal.XLog, err error) {
 	zl, err := newFromConfig(conf, opts...)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func InitFromJson(conf []byte, opts ...Option) (err error) {
 	return nil
 }
 
-func NewFromJson(conf []byte, opts ...Option) (_ internal.ILog, err error) {
+func NewFromJson(conf []byte, opts ...Option) (_ internal.XLog, err error) {
 	zl, err := newFromJson(conf, opts...)
 	if err != nil {
 		return nil, err

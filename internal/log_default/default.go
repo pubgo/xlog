@@ -1,20 +1,21 @@
 package log_default
 
 import (
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/internal/log"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func init() {
 	defaultLog = log.NewXLog(getDevLog())
 }
 
-var defaultLog internal.ILog
+var defaultLog internal.XLog
 
-func GetLog() internal.ILog {
+func GetLog() internal.XLog {
 	if defaultLog == nil {
 		panic("please init default log config")
 	}
@@ -31,7 +32,6 @@ func getDevLog() *zap.Logger {
 	return xerror.PanicErr(cfg.Build()).(*zap.Logger)
 }
 
-func GetDevLog() internal.ILog {
+func GetDevLog() internal.XLog {
 	return log.NewXLog(getDevLog())
 }
-

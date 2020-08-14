@@ -1,6 +1,7 @@
 package example_test
 
 import (
+	"fmt"
 	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
@@ -13,12 +14,12 @@ import (
 var log = xlog.GetDevLog()
 
 func init() {
-	xerror.Exit(dix.Dix(func(log1 *xlog.XLog) {
+	dix.Go(func(log1 xlog.XLog) {
 		log = log1.
 			Named("service").With(xlog.String("key", "value1")).
 			Named("hello").With(xlog.String("key", "value2")).
 			Named("world").With(xlog.String("key", "value3"))
-	}))
+	})
 }
 
 func TestExample(t *testing.T) {
@@ -33,11 +34,12 @@ func TestExample(t *testing.T) {
 			xlog.Any("hss", "ss"),
 		)
 		time.Sleep(time.Second)
-		xerror.Exit(dix.Dix(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05"))))
+		fmt.Println(dix.Graph())
+		dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
 	}
 }
 
-func initCfgFromJsonDebug(name string) internal.ILog {
+func initCfgFromJsonDebug(name string) internal.XLog {
 	cfg := `{
         "level": "debug",
         "development": true,

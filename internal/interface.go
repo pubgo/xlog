@@ -6,7 +6,7 @@ import (
 
 type Field = zap.Field
 
-type ILog interface {
+type XLog interface {
 	Debug(msg string, fields ...Field)
 	DebugF(format string, a ...interface{})
 	Info(msg string, fields ...Field)
@@ -21,6 +21,6 @@ type ILog interface {
 	PanicF(format string, a ...interface{})
 	Fatal(msg string, fields ...Field)
 	FatalF(format string, a ...interface{})
-	Named(s string) ILog
-	With(fields ...Field) ILog
+	Named(s string) XLog
+	With(fields ...Field) XLog
 }
