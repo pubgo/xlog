@@ -37,7 +37,7 @@ type samplingConfig struct {
 
 type config struct {
 	zapOpts           []zap.Option
-	Level             zap.AtomicLevel        `json:"level" yaml:"level" toml:"level"`
+	Level             string                 `json:"level" yaml:"level" toml:"level"`
 	Development       bool                   `json:"development" yaml:"development" toml:"development"`
 	DisableCaller     bool                   `json:"disableCaller" yaml:"disableCaller" toml:"disableCaller"`
 	DisableStacktrace bool                   `json:"disableStacktrace" yaml:"disableStacktrace" toml:"disableStacktrace"`
@@ -182,7 +182,7 @@ func newFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
 
 func NewDevConfig() Config {
 	return Config{
-		Level:       zap.NewAtomicLevelAt(DebugLevel),
+		Level:       DebugLevel.String(),
 		Development: true,
 		Encoding:    "console",
 		EncoderConfig: encoderConfig{
@@ -205,7 +205,7 @@ func NewDevConfig() Config {
 
 func NewProdConfig() Config {
 	return Config{
-		Level:       zap.NewAtomicLevelAt(InfoLevel),
+		Level:       InfoLevel.String(),
 		Development: false,
 		Sampling: &samplingConfig{
 			Initial:    100,

@@ -79,8 +79,8 @@ func WithEncoding(enc string) Option {
 	}
 }
 
-func WithLevel(ll Level) Option {
+func WithLevel(ll string) Option {
 	return func(opts *config) {
-		opts.Level = zap.NewAtomicLevelAt(ll)
+		opts.Level = ll
 	}
 }
