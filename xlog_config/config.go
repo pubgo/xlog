@@ -3,7 +3,6 @@ package xlog_config
 import (
 	"encoding/json"
 	"github.com/pubgo/xlog/internal"
-	"github.com/pubgo/xlog/internal/log_default"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -101,7 +100,7 @@ func InitFromOption(opts ...Option) (err error) {
 	if err != nil {
 		return err
 	}
-	log_default.SetDefaultZapLog(zl)
+	log.SetDefaultZapLog(zl)
 	return nil
 }
 
@@ -129,7 +128,7 @@ func InitFromConfig(conf Config, opts ...Option) (err error) {
 	if err != nil {
 		return err
 	}
-	log_default.SetDefaultZapLog(zl)
+	log.SetDefaultZapLog(zl)
 	return nil
 }
 
@@ -155,7 +154,7 @@ func InitFromJson(conf []byte, opts ...Option) (err error) {
 	if err != nil {
 		return err
 	}
-	log_default.SetDefaultZapLog(zl)
+	log.SetDefaultZapLog(zl)
 	return nil
 }
 
@@ -178,6 +177,14 @@ func newFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
 	}
 
 	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
+}
+
+func InitDevLog(opts ...Option) error {
+	opts = append(opts,
+		WithCaller(),
+		WithCallerSkip(1),
+	)
+	return InitFromConfig(NewDevConfig(), opts...)
 }
 
 func NewDevConfig() Config {

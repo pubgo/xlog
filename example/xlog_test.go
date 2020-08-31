@@ -47,3 +47,7 @@ func TestXLog(t *testing.T) {
 	initCfgFromJson()
 	xlog.InfoF("hello %s", "1234")
 }
+
+func TestDevLog(t *testing.T) {
+	xlog.InfoF("hello %s", "1234")
+}

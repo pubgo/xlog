@@ -1,106 +1,58 @@
 package xlog
 
 import (
-	"fmt"
+	"github.com/pubgo/xlog/xlog_config"
+	"go.uber.org/zap"
+
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/internal/log"
-	"github.com/pubgo/xlog/internal/log_default"
-	"github.com/pubgo/xlog/xlog_config"
-	"go.uber.org/zap"
 )
 
 type XLog = internal.XLog
 type Field = zap.Field
 
-func GetDevLog() internal.XLog {
-	return log_default.GetDevLog()
+func init() {
+	xerror.Exit(xlog_config.InitDevLog())
 }
 
 func GetLog() internal.XLog {
-	return log_default.GetLog()
+	return defaultLog()
 }
 
-func Sync(ll internal.XLog) error {
-	xl, ok := ll.(*log.XLog)
-	if !ok {
-		return xerror.New("params is should be log.XLog type")
-	}
-	if xl == nil {
+func Sync(ll XLog) (err error) {
+	defer xerror.RespErr(&err)
+	if ll == nil {
 		return xerror.New("params is should not be nil")
 	}
 
-	return xl.GetZap().Sync()
+	xl, ok := ll.(*log.XLog)
+	if !ok || xl == nil {
+		return xerror.Fmt("params is should be log.XLog type, got(%v)", xl)
+	}
+
+	return xerror.Wrap(xl.Sync())
 }
 
 func defaultLog() internal.XLog {
-	return log_default.GetLog()
+	return log.GetLog()
 }
 
-func Debug(msg string, fields ...internal.Field) {
-	defaultLog().Debug(msg, fields...)
-}
-
-func DebugF(format string, a ...interface{}) {
-	defaultLog().Debug(fmt.Sprintf(format, a...))
-}
-
-func Info(msg string, fields ...internal.Field) {
-	defaultLog().Info(msg, fields...)
-}
-
-func InfoF(format string, a ...interface{}) {
-	defaultLog().Info(fmt.Sprintf(format, a...))
-}
-
-func Warn(msg string, fields ...internal.Field) {
-	defaultLog().Warn(msg, fields...)
-}
-func WarnF(format string, a ...interface{}) {
-	defaultLog().Warn(fmt.Sprintf(format, a...))
-}
-
-func Error(msg string, fields ...internal.Field) {
-	defaultLog().Error(msg, fields...)
-}
-
-func ErrorF(format string, a ...interface{}) {
-	defaultLog().Error(fmt.Sprintf(format, a...))
-}
-
-func DPanic(msg string, fields ...internal.Field) {
-	defaultLog().DPanic(msg, fields...)
-}
-
-func DPanicF(format string, a ...interface{}) {
-	defaultLog().DPanic(fmt.Sprintf(format, a...))
-}
-
-func Panic(msg string, fields ...internal.Field) {
-	defaultLog().Panic(msg, fields...)
-}
-
-func PanicF(format string, a ...interface{}) {
-	defaultLog().Panic(fmt.Sprintf(format, a...))
-}
-
-func Fatal(msg string, fields ...internal.Field) {
-	defaultLog().Fatal(msg, fields...)
-}
-
-func FatalF(format string, a ...interface{}) {
-	defaultLog().Fatal(fmt.Sprintf(format, a...))
-}
-
-func With(fields ...zap.Field) internal.XLog {
-	return defaultLog().With(fields...)
-}
-
-func Named(s string) internal.XLog {
-	return defaultLog().Named(s).With(zap.Namespace(s))
-}
-
-func init() {
-	// 初始化加载
-	xerror.Exit(xlog_config.InitFromConfig(xlog_config.NewDevConfig()))
-}
+var (
+	Debug   = defaultLog().Debug
+	DebugF  = defaultLog().DebugF
+	Info    = defaultLog().Info
+	InfoF   = defaultLog().InfoF
+	Warn    = defaultLog().Warn
+	WarnF   = defaultLog().WarnF
+	Error   = defaultLog().Error
+	ErrorF  = defaultLog().ErrorF
+	DPanic  = defaultLog().DPanic
+	DPanicF = defaultLog().DPanicF
+	Panic   = defaultLog().Panic
+	PanicF  = defaultLog().PanicF
+	Named   = defaultLog().Named
+	With    = defaultLog().With
+	FatalF  = defaultLog().FatalF
+	Fatal   = defaultLog().Fatal
+)

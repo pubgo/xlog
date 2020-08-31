@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"github.com/pubgo/xerror"
 	"go.uber.org/zap"
 
 	"github.com/pubgo/xlog/internal"
@@ -77,6 +78,14 @@ func (log *xlog) Named(s string) internal.XLog {
 	return &xlog{log.zl.Named(s).With(zap.Namespace(s))}
 }
 
-func (log *xlog) GetZap() *zap.Logger {
-	return log.zl
+func (log *xlog) Sync() error {
+	return xerror.Wrap(log.zl.Sync())
+}
+
+type XLog = xlog
+
+func NewXLog(zl *zap.Logger) *xlog {
+	xl := &xlog{}
+	xl.zl = zl
+	return xl
 }

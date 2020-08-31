@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var log = xlog.GetDevLog()
+var log = xlog.GetLog()
 
 func init() {
 	dix.Go(func(log1 xlog.XLog) {
@@ -69,6 +69,7 @@ func initCfgFromJsonDebug(name string) internal.XLog {
 
 	xx, err := xlog_config.NewFromJson(
 		[]byte(cfg),
+		xlog_config.WithCallerSkip(1),
 	)
 	xerror.Exit(err)
 	return xx.Named(name)
