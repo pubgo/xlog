@@ -74,8 +74,13 @@ func (log *xlog) With(fields ...zap.Field) internal.XLog {
 	return &xlog{log.zl.With(fields...)}
 }
 
-func (log *xlog) Named(s string) internal.XLog {
-	return &xlog{log.zl.Named(s).With(zap.Namespace(s))}
+func (log *xlog) SetZapLogger(zl *zap.Logger) *xlog {
+	log.zl = zl
+	return log
+}
+
+func (log *xlog) Named(s string, opts ...zap.Option) internal.XLog {
+	return &xlog{log.zl.Named(s).WithOptions(append(opts, zap.Fields(zap.Namespace(s)))...)}
 }
 
 func (log *xlog) Sync() error {
@@ -84,8 +89,6 @@ func (log *xlog) Sync() error {
 
 type XLog = xlog
 
-func NewXLog(zl *zap.Logger) *xlog {
-	xl := &xlog{}
-	xl.zl = zl
-	return xl
+func NewXLog() *xlog {
+	return &xlog{}
 }

@@ -3,6 +3,6 @@ package xlog_errs
 import "github.com/pubgo/xerror"
 
 var (
-	Err              = xerror.New("log_default err")
+	Err              = xerror.New("xlog")
 	ErrParamsInValid = Err.New("params is invalid")
 )

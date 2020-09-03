@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type Field = zap.Field
+
 // Skip constructs a no-op field, which is often useful when handling invalid
 // inputs in other Field constructors.
 func Skip() Field {

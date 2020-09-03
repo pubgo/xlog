@@ -5,7 +5,7 @@ import (
 )
 
 type Field = zap.Field
-
+type Option = zap.Option
 type XLog interface {
 	Debug(msg string, fields ...Field)
 	DebugF(format string, a ...interface{})
@@ -21,6 +21,6 @@ type XLog interface {
 	PanicF(format string, a ...interface{})
 	Fatal(msg string, fields ...Field)
 	FatalF(format string, a ...interface{})
-	Named(s string) XLog
+	Named(s string, opts ...zap.Option) XLog
 	With(fields ...Field) XLog
 }

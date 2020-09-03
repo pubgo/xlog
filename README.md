@@ -2,7 +2,7 @@
 xlog is a simple and easy-to-use logger with zap logger as the bottom abstraction
 
 ## 介绍
-xlog是一个对zap logger的简单的封装, 意在简化配置, 增加可控, 简单易用。
+xlog是一个对zap logger的简单的封装, 意在简化配置, 增强可控, 简洁易用。
 
 
 ## example
@@ -10,24 +10,25 @@ xlog是一个对zap logger的简单的封装, 意在简化配置, 增加可控, 
 package example_test
 
 import (
+	"testing"
+	"time"
+
+	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
+	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/xlog_config"
-	"testing"
 )
 
-var fields = xlog.FieldOf(
-	xlog.String("key", "value"),
-)
-var log = xlog.GetDevLog().With(fields...)
+var log = xlog.GetLog()
 
 func init() {
-	//initCfgFromJson()
-	initCfgFromJsonDebug()
-	log = xlog.GetLog().
-		Named("service").With(fields...).
-		Named("hello").With(fields...).
-		Named("world").With(fields...)
+	dix.Go(func(log1 xlog.XLog) {
+		log = log1.
+			Named("service").With(xlog.String("key", "service")).
+			Named("hello").With(xlog.String("key", "hello")).
+			Named("world").With(xlog.String("key", "world"))
+	})
 }
 
 func TestExample(t *testing.T) {
@@ -35,20 +36,15 @@ func TestExample(t *testing.T) {
 		xlog.Any("hss", "ss"),
 	)
 
-	log.Info("hello",
-		xlog.Any("hss", "ss"),
-	)
-
-	log.Error("hello",
-		xlog.Any("hss", "ss"),
-	)
+	dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
 
 	log.Info("hello",
 		xlog.Any("hss", "ss"),
 	)
+	//fmt.Println(dix.Graph())
 }
 
-func initCfgFromJsonDebug() {
+func initCfgFromJsonDebug(name string) internal.XLog {
 	cfg := `{
         "level": "debug",
         "development": true,
@@ -78,8 +74,9 @@ func initCfgFromJsonDebug() {
         ],
         "initialFields": null
 }`
-	xerror.Exit(xlog_config.InitFromJson(
-		[]byte(cfg),
-	))
+
+	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
+	xerror.Exit(err)
+	return xlog.New(zl.WithOptions(xlog.AddCallerSkip(1)))
 }
 ```

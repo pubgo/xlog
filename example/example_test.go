@@ -1,13 +1,14 @@
 package example_test
 
 import (
+	"testing"
+	"time"
+
 	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/xlog_config"
-	"testing"
-	"time"
 )
 
 var log = xlog.GetLog()
@@ -15,25 +16,23 @@ var log = xlog.GetLog()
 func init() {
 	dix.Go(func(log1 xlog.XLog) {
 		log = log1.
-			Named("service").With(xlog.String("key", "value1")).
-			Named("hello").With(xlog.String("key", "value2")).
-			Named("world").With(xlog.String("key", "value3"))
+			Named("service").With(xlog.String("key", "service")).
+			Named("hello").With(xlog.String("key", "hello")).
+			Named("world").With(xlog.String("key", "world"))
 	})
 }
 
 func TestExample(t *testing.T) {
-	for {
-		log.Debug("hello",
-			xlog.Any("hss", "ss"),
-		)
+	log.Debug("hello",
+		xlog.Any("hss", "ss"),
+	)
 
-		log.Info("hello",
-			xlog.Any("hss", "ss"),
-		)
-		time.Sleep(time.Second)
-		//fmt.Println(dix.Graph())
-		dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
-	}
+	dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
+
+	log.Info("hello",
+		xlog.Any("hss", "ss"),
+	)
+	//fmt.Println(dix.Graph())
 }
 
 func initCfgFromJsonDebug(name string) internal.XLog {
@@ -67,10 +66,7 @@ func initCfgFromJsonDebug(name string) internal.XLog {
         "initialFields": null
 }`
 
-	xx, err := xlog_config.NewFromJson(
-		[]byte(cfg),
-		xlog_config.WithCallerSkip(1),
-	)
+	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
 	xerror.Exit(err)
-	return xx.Named(name)
+	return xlog.New(zl.WithOptions(xlog.AddCallerSkip(1)))
 }

@@ -36,11 +36,10 @@ func initCfgFromJson() {
         "errorOutputPaths": ["stderr"],
         "initialFields": null
 }`
-	xerror.Exit(xlog_config.InitFromJson(
-		[]byte(cfg),
-		xlog_config.WithDevelopment(),
-		xlog_config.WithEncoding("console")),
-	)
+
+	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
+	xerror.Exit(err)
+	xerror.Exit(xlog.SetLog(xlog.New(zl)))
 }
 
 func TestXLog(t *testing.T) {

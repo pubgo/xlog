@@ -2,17 +2,28 @@ package xlog_config
 
 import (
 	"encoding/json"
-	"github.com/pubgo/xlog/internal"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/pubgo/xerror"
-
-	"github.com/pubgo/xlog/internal/log"
 	"github.com/pubgo/xlog/xlog_errs"
 )
 
 type Config config
+type Option func(opts *config)
+type config struct {
+	Level             string                 `json:"level" yaml:"level" toml:"level"`
+	Development       bool                   `json:"development" yaml:"development" toml:"development"`
+	DisableCaller     bool                   `json:"disableCaller" yaml:"disableCaller" toml:"disableCaller"`
+	DisableStacktrace bool                   `json:"disableStacktrace" yaml:"disableStacktrace" toml:"disableStacktrace"`
+	Sampling          *samplingConfig        `json:"sampling" yaml:"sampling" toml:"sampling"`
+	Encoding          string                 `json:"encoding" yaml:"encoding" toml:"encoding"`
+	EncoderConfig     encoderConfig          `json:"encoderConfig" yaml:"encoderConfig" toml:"encoderConfig"`
+	OutputPaths       []string               `json:"outputPaths" yaml:"outputPaths" toml:"outputPaths"`
+	ErrorOutputPaths  []string               `json:"errorOutputPaths" yaml:"errorOutputPaths" toml:"errorOutputPaths"`
+	InitialFields     map[string]interface{} `json:"initialFields" yaml:"initialFields" toml:"initialFields"`
+}
 
 type encoderConfig struct {
 	MessageKey     string `json:"messageKey" yaml:"messageKey" toml:"messageKey"`
@@ -34,22 +45,9 @@ type samplingConfig struct {
 	Thereafter int `json:"thereafter" yaml:"thereafter" toml:"thereafter"`
 }
 
-type config struct {
-	zapOpts           []zap.Option
-	Level             string                 `json:"level" yaml:"level" toml:"level"`
-	Development       bool                   `json:"development" yaml:"development" toml:"development"`
-	DisableCaller     bool                   `json:"disableCaller" yaml:"disableCaller" toml:"disableCaller"`
-	DisableStacktrace bool                   `json:"disableStacktrace" yaml:"disableStacktrace" toml:"disableStacktrace"`
-	Sampling          *samplingConfig        `json:"sampling" yaml:"sampling" toml:"sampling"`
-	Encoding          string                 `json:"encoding" yaml:"encoding" toml:"encoding"`
-	EncoderConfig     encoderConfig          `json:"encoderConfig" yaml:"encoderConfig" toml:"encoderConfig"`
-	OutputPaths       []string               `json:"outputPaths" yaml:"outputPaths" toml:"outputPaths"`
-	ErrorOutputPaths  []string               `json:"errorOutputPaths" yaml:"errorOutputPaths" toml:"errorOutputPaths"`
-	InitialFields     map[string]interface{} `json:"initialFields" yaml:"initialFields" toml:"initialFields"`
-}
-
 func (t config) toZapLogger() (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
+
 	zapCfg := zap.Config{}
 	xerror.Panic(json.Unmarshal(xerror.PanicBytes(json.Marshal(&t)), &zapCfg))
 
@@ -90,29 +88,10 @@ func (t config) toZapLogger() (_ *zap.Logger, err error) {
 		zapCfg.EncoderConfig.EncodeName = nameEncoder[defaultKey]
 	}
 
-	return xerror.PanicErr(zapCfg.Build(t.zapOpts...)).(*zap.Logger), nil
+	return xerror.PanicErr(zapCfg.Build()).(*zap.Logger), nil
 }
 
-type Option func(opts *config)
-
-func InitFromOption(opts ...Option) (err error) {
-	zl, err := newFromOption(opts...)
-	if err != nil {
-		return err
-	}
-	log.SetDefaultZapLog(zl)
-	return nil
-}
-
-func NewFromOption(opts ...Option) (_ internal.XLog, err error) {
-	zl, err := newFromOption(opts...)
-	if err != nil {
-		return nil, err
-	}
-	return log.NewXLog(zl), nil
-}
-
-func newFromOption(opts ...Option) (_ *zap.Logger, err error) {
+func NewZapLoggerFromOption(opts ...Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
 
 	cfg := config(NewProdConfig())
@@ -123,50 +102,18 @@ func newFromOption(opts ...Option) (_ *zap.Logger, err error) {
 	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
 }
 
-func InitFromConfig(conf Config, opts ...Option) (err error) {
-	zl, err := newFromConfig(conf, opts...)
-	if err != nil {
-		return err
-	}
-	log.SetDefaultZapLog(zl)
-	return nil
-}
-
-func NewFromConfig(conf Config, opts ...Option) (_ internal.XLog, err error) {
-	zl, err := newFromConfig(conf, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return log.NewXLog(zl), nil
-}
-
-func newFromConfig(conf Config, opts ...Option) (_ *zap.Logger, err error) {
+func NewZapLoggerFromConfig(conf Config, opts ...Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
+
 	cfg := config(conf)
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+
 	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
 }
 
-func InitFromJson(conf []byte, opts ...Option) (err error) {
-	zl, err := newFromJson(conf, opts...)
-	if err != nil {
-		return err
-	}
-	log.SetDefaultZapLog(zl)
-	return nil
-}
-
-func NewFromJson(conf []byte, opts ...Option) (_ internal.XLog, err error) {
-	zl, err := newFromJson(conf, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return log.NewXLog(zl), nil
-}
-
-func newFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
+func NewZapLoggerFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
 
 	var cfg config
@@ -177,14 +124,6 @@ func newFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
 	}
 
 	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
-}
-
-func InitDevLog(opts ...Option) error {
-	opts = append(opts,
-		WithCaller(),
-		WithCallerSkip(1),
-	)
-	return InitFromConfig(NewDevConfig(), opts...)
 }
 
 func NewDevConfig() Config {
