@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pubgo/xerror"
 	"go.uber.org/zap"
+	"strings"
 
 	"github.com/pubgo/xlog/internal"
 )
@@ -75,11 +76,19 @@ func (log *xlog) With(fields ...zap.Field) internal.XLog {
 }
 
 func (log *xlog) SetZapLogger(zl *zap.Logger) *xlog {
+	if zl == nil {
+		return log
+	}
+
 	log.zl = zl
 	return log
 }
 
 func (log *xlog) Named(s string, opts ...zap.Option) internal.XLog {
+	if strings.TrimSpace(s) == "" {
+		return log
+	}
+
 	return &xlog{log.zl.Named(s).WithOptions(append(opts, zap.Fields(zap.Namespace(s)))...)}
 }
 
