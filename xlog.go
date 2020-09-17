@@ -17,16 +17,20 @@ func New(zl *zap.Logger) XLog {
 	return log.NewXLog().SetZapLogger(zl)
 }
 
-func Sync(ll XLog) (err error) {
+func Sync(ll ...XLog) (err error) {
 	defer xerror.RespErr(&err)
-	if ll == nil {
-		return xerror.New("the params should not be nil")
+	if len(ll) == 0 {
+		ll = append(ll, defaultLog)
 	}
 
-	xl, ok := ll.(*log.XLog)
-	if !ok || xl == nil {
-		return xerror.Fmt("the params should be log.XLog type, got(%v)", xl)
+	for i := range ll {
+		xl, ok := ll[i].(*log.XLog)
+		if !ok || xl == nil {
+			return xerror.Fmt("the params should be log.XLog type, got(%v)", xl)
+		}
+
+		xerror.Panic(xl.Sync())
 	}
 
-	return xerror.Wrap(xl.Sync())
+	return nil
 }

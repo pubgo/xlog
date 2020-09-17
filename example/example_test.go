@@ -11,7 +11,7 @@ import (
 	"github.com/pubgo/xlog/xlog_config"
 )
 
-var log = xlog.GetLog()
+var log = xlog.GetDevLog()
 
 func init() {
 	dix.Go(func(log1 xlog.XLog) {
