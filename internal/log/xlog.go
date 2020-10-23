@@ -15,31 +15,31 @@ type xlog struct {
 	zl *zap.Logger
 }
 
-func (log *xlog) DebugF(format string, a ...interface{}) {
+func (log *xlog) Debugf(format string, a ...interface{}) {
 	log.zl.Debug(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) InfoF(format string, a ...interface{}) {
+func (log *xlog) Infof(format string, a ...interface{}) {
 	log.zl.Info(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) WarnF(format string, a ...interface{}) {
+func (log *xlog) Warnf(format string, a ...interface{}) {
 	log.zl.Warn(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) ErrorF(format string, a ...interface{}) {
+func (log *xlog) Errorf(format string, a ...interface{}) {
 	log.zl.Error(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) DPanicF(format string, a ...interface{}) {
+func (log *xlog) DPanicf(format string, a ...interface{}) {
 	log.zl.DPanic(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) PanicF(format string, a ...interface{}) {
+func (log *xlog) Panicf(format string, a ...interface{}) {
 	log.zl.Panic(fmt.Sprintf(format, a...))
 }
 
-func (log *xlog) FatalF(format string, a ...interface{}) {
+func (log *xlog) Fatalf(format string, a ...interface{}) {
 	log.zl.Fatal(fmt.Sprintf(format, a...))
 }
 

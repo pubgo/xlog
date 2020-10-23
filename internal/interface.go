@@ -8,19 +8,19 @@ type Field = zap.Field
 type Option = zap.Option
 type XLog interface {
 	Debug(msg string, fields ...Field)
-	DebugF(format string, a ...interface{})
+	Debugf(format string, a ...interface{})
 	Info(msg string, fields ...Field)
-	InfoF(format string, a ...interface{})
+	Infof(format string, a ...interface{})
 	Warn(msg string, fields ...Field)
-	WarnF(format string, a ...interface{})
+	Warnf(format string, a ...interface{})
 	Error(msg string, fields ...Field)
-	ErrorF(format string, a ...interface{})
+	Errorf(format string, a ...interface{})
 	DPanic(msg string, fields ...Field)
-	DPanicF(format string, a ...interface{})
+	DPanicf(format string, a ...interface{})
 	Panic(msg string, fields ...Field)
-	PanicF(format string, a ...interface{})
+	Panicf(format string, a ...interface{})
 	Fatal(msg string, fields ...Field)
-	FatalF(format string, a ...interface{})
+	Fatalf(format string, a ...interface{})
 	Named(s string, opts ...zap.Option) XLog
 	With(fields ...Field) XLog
 }

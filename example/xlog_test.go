@@ -39,14 +39,14 @@ func initCfgFromJson() {
 
 	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
 	xerror.Exit(err)
-	xerror.Exit(xlog.SetLog(xlog.New(zl)))
+	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
 }
 
 func TestXLog(t *testing.T) {
 	initCfgFromJson()
-	xlog.InfoF("hello %s", "1234")
+	xlog.Infof("hello %s", "1234")
 }
 
 func TestDevLog(t *testing.T) {
-	xlog.InfoF("hello %s", "1234")
+	xlog.Infof("hello %s", "1234")
 }

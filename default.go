@@ -1,29 +1,39 @@
 package xlog
 
 import (
+	"errors"
 	"fmt"
+
+	"go.uber.org/zap"
+
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/internal/log"
 	"github.com/pubgo/xlog/xlog_config"
-	"go.uber.org/zap"
 )
 
 func GetDevLog() XLog {
 	zl, err := xlog_config.NewZapLoggerFromConfig(xlog_config.NewDevConfig())
-	if err != nil {
-		xerror.Exit(err)
-	}
+	xerror.Exit(err)
 
 	zl = zl.WithOptions(zap.AddCaller(), zap.AddCallerSkip(1)).Named("xlog")
-	return log.NewXLog().SetZapLogger(zl)
+	return New(zl)
 }
 
 var defaultLog = func() *log.XLog {
 	return GetDevLog().Named("debug", zap.AddCallerSkip(1)).(*log.XLog)
 }()
 
-func SetLog(zl XLog) error {
+func getDefault() *log.XLog {
+	if defaultLog != nil {
+		return defaultLog
+	}
+
+	xerror.Exit(errors.New("please init defaultLog"))
+	return nil
+}
+
+func SetDefault(zl XLog) error {
 	if zl == nil {
 		return xerror.New("the params should not be nil")
 	}
@@ -33,65 +43,65 @@ func SetLog(zl XLog) error {
 }
 
 func Debug(msg string, fields ...internal.Field) {
-	defaultLog.Debug(msg, fields...)
+	getDefault().Debug(msg, fields...)
 }
 
-func DebugF(format string, a ...interface{}) {
-	defaultLog.Debug(fmt.Sprintf(format, a...))
+func Debugf(format string, a ...interface{}) {
+	getDefault().Debug(fmt.Sprintf(format, a...))
 }
 
-func InfoF(format string, a ...interface{}) {
-	defaultLog.Info(fmt.Sprintf(format, a...))
+func Infof(format string, a ...interface{}) {
+	getDefault().Info(fmt.Sprintf(format, a...))
 }
 
-func WarnF(format string, a ...interface{}) {
-	defaultLog.Warn(fmt.Sprintf(format, a...))
+func Warnf(format string, a ...interface{}) {
+	getDefault().Warn(fmt.Sprintf(format, a...))
 }
 
-func ErrorF(format string, a ...interface{}) {
-	defaultLog.Error(fmt.Sprintf(format, a...))
+func Errorf(format string, a ...interface{}) {
+	getDefault().Error(fmt.Sprintf(format, a...))
 }
 
-func DPanicF(format string, a ...interface{}) {
-	defaultLog.DPanic(fmt.Sprintf(format, a...))
+func DPanicf(format string, a ...interface{}) {
+	getDefault().DPanic(fmt.Sprintf(format, a...))
 }
 
-func PanicF(format string, a ...interface{}) {
-	defaultLog.Panic(fmt.Sprintf(format, a...))
+func Panicf(format string, a ...interface{}) {
+	getDefault().Panic(fmt.Sprintf(format, a...))
 }
 
-func FatalF(format string, a ...interface{}) {
-	defaultLog.Fatal(fmt.Sprintf(format, a...))
+func Fatalf(format string, a ...interface{}) {
+	getDefault().Fatal(fmt.Sprintf(format, a...))
 }
 
 func Info(msg string, fields ...internal.Field) {
-	defaultLog.Info(msg, fields...)
+	getDefault().Info(msg, fields...)
 }
 
 func Warn(msg string, fields ...internal.Field) {
-	defaultLog.Warn(msg, fields...)
+	getDefault().Warn(msg, fields...)
 }
 
 func Error(msg string, fields ...internal.Field) {
-	defaultLog.Error(msg, fields...)
+	getDefault().Error(msg, fields...)
 }
 
 func DPanic(msg string, fields ...internal.Field) {
-	defaultLog.DPanic(msg, fields...)
+	getDefault().DPanic(msg, fields...)
 }
 
 func Panic(msg string, fields ...internal.Field) {
-	defaultLog.Panic(msg, fields...)
+	getDefault().Panic(msg, fields...)
 }
 
 func Fatal(msg string, fields ...internal.Field) {
-	defaultLog.Fatal(msg, fields...)
+	getDefault().Fatal(msg, fields...)
 }
 
 func With(fields ...zap.Field) internal.XLog {
-	return defaultLog.With(fields...)
+	return getDefault().With(fields...)
 }
 
 func Named(s string, opts ...zap.Option) internal.XLog {
-	return defaultLog.Named(s, opts...)
+	return getDefault().Named(s, opts...)
 }
