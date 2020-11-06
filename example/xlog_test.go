@@ -1,10 +1,11 @@
 package example
 
 import (
+	"testing"
+
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/xlog_config"
-	"testing"
 )
 
 func initCfgFromJson() {
