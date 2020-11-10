@@ -2,9 +2,10 @@ package log
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/pubgo/xerror"
 	"go.uber.org/zap"
-	"strings"
 
 	"github.com/pubgo/xlog/internal"
 )
@@ -89,7 +90,7 @@ func (log *xlog) Named(s string, opts ...zap.Option) internal.XLog {
 		return log
 	}
 
-	return &xlog{log.zl.Named(s).WithOptions(append(opts, zap.Fields(zap.Namespace(s)))...)}
+	return &xlog{log.zl.Named(s).WithOptions(opts...)}
 }
 
 func (log *xlog) Sync() error {
