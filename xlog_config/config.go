@@ -141,7 +141,7 @@ func NewDevConfig() Config {
 			EncodeLevel:    "capitalColor",
 			EncodeTime:     "iso8601",
 			EncodeDuration: "string",
-			EncodeCaller:   "default",
+			EncodeCaller:   "full",
 			LineEnding:     zapcore.DefaultLineEnding,
 		},
 		OutputPaths:      []string{"stderr"},
