@@ -1,13 +1,13 @@
 package rotate
 
 import (
-	rotatelogs "github.com/pubgo/xlog/internal/writer/rotate/file-rotatelogs"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
 
+	rotateLogs "github.com/pubgo/xlog/internal/writer/rotate/file-rotatelogs"
 )
 
 const (
@@ -65,7 +65,7 @@ func NewWriterConfig() *Config {
 	}
 }
 
-func NewRotateLogger(rcfg *Config) (*rotatelogs.RotateLogs, error) {
+func NewRotateLogger(rcfg *Config) (*rotateLogs.RotateLogs, error) {
 
 	base := path.Join(rcfg.Dir, rcfg.Sub, rcfg.Filename)
 	p, _ := filepath.Split(base)
@@ -82,12 +82,12 @@ func NewRotateLogger(rcfg *Config) (*rotatelogs.RotateLogs, error) {
 	}
 
 	// create Rotate Logs
-	return rotatelogs.New(
+	return rotateLogs.New(
 		base+rcfg.Pattern,
-		rotatelogs.WithLocation(rcfg.Loc),
-		rotatelogs.WithRotationCount(rcfg.Count),
-		rotatelogs.WithLinkName(base),              // 生成软链，指向最新日志文件
-		rotatelogs.WithMaxAge(rcfg.Age),            // 文件最大保存时间
-		rotatelogs.WithRotationTime(rcfg.Duration), // 日志切割时间间隔
+		rotateLogs.WithLocation(rcfg.Loc),
+		rotateLogs.WithRotationCount(rcfg.Count),
+		rotateLogs.WithLinkName(base),              // 生成软链，指向最新日志文件
+		rotateLogs.WithMaxAge(rcfg.Age),            // 文件最大保存时间
+		rotateLogs.WithRotationTime(rcfg.Duration), // 日志切割时间间隔
 	)
 }

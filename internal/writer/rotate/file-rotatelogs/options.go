@@ -1,9 +1,9 @@
 package rotatelogs
 
 import (
-	"github.com/pubgo/xlog/internal/writer/rotate/file-rotatelogs/internal/option"
 	"time"
 
+	"github.com/pubgo/xlog/internal/writer/rotate/file-rotatelogs/internal/option"
 )
 
 const (

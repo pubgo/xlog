@@ -5,50 +5,33 @@ import (
 	"time"
 )
 
-type Option interface {
-	apply(*Config)
-}
-
+type Option interface{ apply(*Config) }
 type optionFunc func(*Config)
 
-func (f optionFunc) apply(cfg *Config) {
-	f(cfg)
-}
+func (f optionFunc) apply(cfg *Config) { f(cfg) }
 
 func WithLogDir(dir string) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Dir = dir
-	})
+	return optionFunc(func(cfg *Config) { cfg.Dir = dir })
 }
 
 func WithLogSubDir(dir string) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Sub = dir
-	})
+	return optionFunc(func(cfg *Config) { cfg.Sub = dir })
 }
 
 func WithFilename(fn string) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Filename = fn
-	})
+	return optionFunc(func(cfg *Config) { cfg.Filename = fn })
 }
 
 func WithFileMode(Perm os.FileMode) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Perm = Perm
-	})
+	return optionFunc(func(cfg *Config) { cfg.Perm = Perm })
 }
 
 func WithAge(Age time.Duration) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Age = Age
-	})
+	return optionFunc(func(cfg *Config) { cfg.Age = Age })
 }
 
 func WithDuration(Duration time.Duration) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Duration = Duration
-	})
+	return optionFunc(func(cfg *Config) { cfg.Duration = Duration })
 }
 
 // sets the number of files should be kept before it gets purged from the file system.
@@ -61,9 +44,7 @@ func WithCount(Count uint) Option {
 }
 
 func WithPattern(Pattern string) Option {
-	return optionFunc(func(cfg *Config) {
-		cfg.Pattern = Pattern
-	})
+	return optionFunc(func(cfg *Config) { cfg.Pattern = Pattern })
 }
 
 func WithLocation(loc *time.Location) Option {
