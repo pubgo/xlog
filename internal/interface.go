@@ -2,7 +2,6 @@ package internal
 
 import (
 	"go.uber.org/zap"
-	"log"
 )
 
 type Field = zap.Field
@@ -25,8 +24,4 @@ type XLog interface {
 	Fatalf(format string, a ...interface{})
 	Named(s string, opts ...zap.Option) XLog
 	With(fields ...Field) XLog
-}
-
-func init() {
-	log.Fatal()
 }
