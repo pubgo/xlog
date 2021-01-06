@@ -164,7 +164,7 @@ func NewZapLoggerFromOption(opts ...Option) (_ *zap.Logger, err error) {
 		opt(&cfg)
 	}
 
-	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
+	return xerror.PanicErr(cfg.build()).(*zap.Logger), nil
 }
 
 func NewZapLoggerFromConfig(conf Config, opts ...Option) (_ *zap.Logger, err error) {
@@ -175,7 +175,7 @@ func NewZapLoggerFromConfig(conf Config, opts ...Option) (_ *zap.Logger, err err
 		opt(&cfg)
 	}
 
-	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
+	return xerror.PanicErr(cfg.build()).(*zap.Logger), nil
 }
 
 func NewZapLoggerFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error) {
@@ -188,7 +188,7 @@ func NewZapLoggerFromJson(conf []byte, opts ...Option) (_ *zap.Logger, err error
 		opt(&cfg)
 	}
 
-	return xerror.PanicErr(cfg.toZapLogger()).(*zap.Logger), nil
+	return xerror.PanicErr(cfg.build()).(*zap.Logger), nil
 }
 
 func NewDevConfig() Config {
