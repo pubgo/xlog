@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"time"
 
@@ -58,6 +59,7 @@ var (
 		},
 	}
 	sinkFactories = map[string]func(*url.URL) (zap.Sink, error){
+		"multi":  newMultiSink,
 		"rotate": newRotateSink,
 		"file":   newFileSink,
 	}
@@ -73,6 +75,71 @@ func init() {
 	for k, v := range sinkFactories {
 		_ = zap.RegisterSink(k, v)
 	}
+}
+
+// multi:///tmp/service/log?spilt?=1m&retain=1m
+func newMultiSink(u *url.URL) (zap.Sink, error) {
+	if u.User != nil {
+		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
+	}
+	if u.Fragment != "" {
+		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
+	}
+	if u.RawQuery != "" {
+		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
+	}
+	// Error messages are better if we check hostname and port separately.
+	if u.Port() != "" {
+		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
+	}
+	if hn := u.Hostname(); hn != "" && hn != "localhost" {
+		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
+	}
+
+	query := u.Query()
+	var cfg = rotate.NewWriterConfig()
+	for k := range query {
+		v := query.Get(k)
+		switch k {
+		case "dir":
+			cfg.Dir = v
+		case "sub":
+			cfg.Sub = v
+		case "name":
+			cfg.Filename = v
+		case "age":
+			cfg.Age = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+		case "dur":
+			cfg.Duration = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+		case "pattern":
+			cfg.Pattern = v
+		case "count":
+			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
+		}
+	}
+
+	for _, lvl := range allLevels {
+		// Asyncer
+		asc, err := syncer.NewAsyncer(
+			path.Join(dir, lvl.String()),
+			l.project,
+			spiltMinute, retainMinute,
+		)
+		if err != nil {
+			return err
+		}
+
+		// Core
+		core := zapcore.NewCore(JsonEncoder, asc, fixedEnablerFunc(lvl))
+
+		l.syncers = append(l.syncers, asc)
+		l.zCores = append(l.zCores, core)
+	}
+
+	zapcore.NewTee()
+
+	w, err := rotate.NewRotateLogger(cfg)
+	return &nopCloserSink{zapcore.AddSync(w)}, err
 }
 
 // rotate:///hello.go

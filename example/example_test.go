@@ -68,5 +68,5 @@ func initCfgFromJsonDebug(name string) internal.XLog {
 
 	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
 	xerror.Exit(err)
-	return xlog.New(zl.WithOptions(xlog.AddCallerSkip(1)))
+	return xlog.New(zl.WithOptions(xlog.WithCallerSkip(1)))
 }

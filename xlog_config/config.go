@@ -2,6 +2,11 @@ package xlog_config
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/url"
+	"path"
+	_ "unsafe"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -45,7 +50,67 @@ type samplingConfig struct {
 	Thereafter int `json:"thereafter" yaml:"thereafter" toml:"thereafter"`
 }
 
-func (t config) toZapLogger() (_ *zap.Logger, err error) {
+var allLevels = []Level{DebugLevel, InfoLevel, WarnLevel, ErrorLevel, FatalLevel}
+var fixedEnablerFunc = func(level Level, level1 Level) zap.LevelEnablerFunc {
+	return func(lv Level) bool {
+		return lv == level && lv >= level1
+	}
+}
+
+func (t config) build() (_ *zap.Logger, gErr error) {
+	defer xerror.RespErr(&gErr)
+
+	cfg, err := t.toZapLogger()
+	xerror.Panic(err)
+
+	enc, err := newEncoder(cfg.Encoding, cfg.EncoderConfig)
+	xerror.Panic(err)
+
+	var cores []zapcore.Core
+	var closers []io.Closer
+	for i := range cfg.OutputPaths {
+		u, err := url.Parse(cfg.OutputPaths[i])
+		xerror.Panic(err)
+
+		if u.Scheme == "" {
+			u.Scheme = "file"
+		}
+
+		if u.Scheme == "multi" {
+			for _, lvl := range allLevels {
+				sink, err := sinkFactories[u.Scheme](xerror.PanicErr(url.Parse(path.Join(cfg.OutputPaths[i], lvl.String()))).(*url.URL))
+				xerror.Panic(err)
+
+				cores = append(cores, zapcore.NewCore(enc, sink, fixedEnablerFunc(lvl, cfg.Level.Level())))
+				closers = append(closers, sink)
+			}
+			continue
+		}
+
+		sink, err := sinkFactories[u.Scheme](u)
+		xerror.Panic(err)
+
+		cores = append(cores, zapcore.NewCore(enc, sink, cfg.Level))
+		closers = append(closers, sink)
+	}
+
+	errSink, _, err := zap.Open(cfg.ErrorOutputPaths...)
+	if err != nil {
+		for _, c := range closers {
+			_ = c.Close()
+		}
+		return nil, err
+	}
+
+	if cfg.Level == (zap.AtomicLevel{}) {
+		return nil, fmt.Errorf("missing Level")
+	}
+
+	log := zap.New(zapcore.NewTee(cores...), buildOptions(cfg, errSink)...)
+	return log, nil
+}
+
+func (t config) toZapLogger() (_ zap.Config, err error) {
 	defer xerror.RespErr(&err)
 
 	zapCfg := zap.Config{}
@@ -88,7 +153,7 @@ func (t config) toZapLogger() (_ *zap.Logger, err error) {
 		zapCfg.EncoderConfig.EncodeName = nameEncoder[defaultKey]
 	}
 
-	return xerror.PanicErr(zapCfg.Build()).(*zap.Logger), nil
+	return zapCfg, nil
 }
 
 func NewZapLoggerFromOption(opts ...Option) (_ *zap.Logger, err error) {
@@ -175,3 +240,9 @@ func NewProdConfig() Config {
 		ErrorOutputPaths: []string{"stderr"},
 	}
 }
+
+//go:linkname newEncoder go.uber.org/zap.newEncoder
+func newEncoder(name string, encoderConfig zapcore.EncoderConfig) (zapcore.Encoder, error)
+
+//go:linkname buildOptions go.uber.org/zap.(Config).buildOptions
+func buildOptions(cfg zap.Config, errSink zapcore.WriteSyncer) []zap.Option
