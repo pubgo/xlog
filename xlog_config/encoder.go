@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path"
 	"strconv"
 	"time"
 
@@ -117,26 +116,6 @@ func newMultiSink(u *url.URL) (zap.Sink, error) {
 			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
 		}
 	}
-
-	for _, lvl := range allLevels {
-		// Asyncer
-		asc, err := syncer.NewAsyncer(
-			path.Join(dir, lvl.String()),
-			l.project,
-			spiltMinute, retainMinute,
-		)
-		if err != nil {
-			return err
-		}
-
-		// Core
-		core := zapcore.NewCore(JsonEncoder, asc, fixedEnablerFunc(lvl))
-
-		l.syncers = append(l.syncers, asc)
-		l.zCores = append(l.zCores, core)
-	}
-
-	zapcore.NewTee()
 
 	w, err := rotate.NewRotateLogger(cfg)
 	return &nopCloserSink{zapcore.AddSync(w)}, err
