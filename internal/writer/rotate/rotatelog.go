@@ -65,15 +65,15 @@ func NewWriterConfig() *Config {
 	}
 }
 
-func NewRotateLogger(rcfg *Config) (*rotateLogs.RotateLogs, error) {
+func NewRotateLogger(config *Config) (*rotateLogs.RotateLogs, error) {
 
-	base := path.Join(rcfg.Dir, rcfg.Sub, rcfg.Filename)
+	base := path.Join(config.Dir, config.Sub, config.Filename)
 	p, _ := filepath.Split(base)
 
 	// check dir
 	if _, err := os.Stat(p); err != nil {
 		if os.IsNotExist(err) {
-			if err := os.MkdirAll(p, rcfg.Perm); err != nil {
+			if err := os.MkdirAll(p, config.Perm); err != nil {
 				return nil, err
 			}
 		} else {
@@ -83,11 +83,11 @@ func NewRotateLogger(rcfg *Config) (*rotateLogs.RotateLogs, error) {
 
 	// create Rotate Logs
 	return rotateLogs.New(
-		base+rcfg.Pattern,
-		rotateLogs.WithLocation(rcfg.Loc),
-		rotateLogs.WithRotationCount(rcfg.Count),
-		rotateLogs.WithLinkName(base),              // 生成软链，指向最新日志文件
-		rotateLogs.WithMaxAge(rcfg.Age),            // 文件最大保存时间
-		rotateLogs.WithRotationTime(rcfg.Duration), // 日志切割时间间隔
+		base+config.Pattern,
+		rotateLogs.WithLocation(config.Loc),
+		rotateLogs.WithRotationCount(config.Count),
+		rotateLogs.WithLinkName(base),                // 生成软链，指向最新日志文件
+		rotateLogs.WithMaxAge(config.Age),            // 文件最大保存时间
+		rotateLogs.WithRotationTime(config.Duration), // 日志切割时间间隔
 	)
 }

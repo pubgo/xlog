@@ -8,8 +8,13 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type Fields []Field
 type Field = zap.Field
+type Fields []Field
+
+func (t *Fields) Skip() *Fields {
+	*t = append(*t, Skip())
+	return t
+}
 
 func Skip() Field                                          { return zap.Skip() }
 func Binary(key string, val []byte) Field                  { return zap.Binary(key, val) }
@@ -31,7 +36,6 @@ func Uint64(key string, val uint64) Field                  { return zap.Uint64(k
 func Uint32(key string, val uint32) Field                  { return zap.Uint32(key, val) }
 func Uint16(key string, val uint16) Field                  { return zap.Uint16(key, val) }
 func Uint8(key string, val uint8) Field                    { return zap.Uint8(key, val) }
-func Uintptr(key string, val uintptr) Field                { return zap.Uintptr(key, val) }
 func Reflect(key string, val interface{}) Field            { return zap.Reflect(key, val) }
 func Stringer(key string, val fmt.Stringer) Field          { return zap.Stringer(key, val) }
 func Time(key string, val time.Time) Field                 { return zap.Time(key, val) }

@@ -10,9 +10,7 @@ import (
 type XLog = internal.XLog
 
 func New(zl *zap.Logger) XLog {
-	if zl == nil {
-		xerror.Panic(xerror.New("zap.Logger [zl] should not be nil"))
-	}
+	xerror.Assert(zl == nil, "zap.Logger [zl] should not be nil")
 	return log.NewXLog().SetZapLogger(zl)
 }
 

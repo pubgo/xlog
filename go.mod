@@ -8,7 +8,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.3
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pubgo/dix v0.1.0
-	github.com/pubgo/xerror v0.2.13
+	github.com/pubgo/xerror v0.3.15
 	github.com/tebeka/strftime v0.1.5 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
