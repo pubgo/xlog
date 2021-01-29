@@ -1,6 +1,7 @@
 package example
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/pubgo/xerror"
@@ -38,7 +39,12 @@ func initCfgFromJson() {
         "initialFields": null
 }`
 
-	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
+	var cfg1 xlog_config.Config
+	xerror.Exit(json.Unmarshal([]byte(cfg), &cfg1))
+	zl, err := xlog_config.NewZapLogger(cfg1, func(opts *xlog_config.Config) {
+		opts.Encoding = "console"
+	})
+
 	xerror.Exit(err)
 	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
 }

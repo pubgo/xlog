@@ -7,11 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal/writer/rotate"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const defaultKey = "default"
