@@ -20,18 +20,20 @@ func Watch(fn func(logs Xlog)) {
 
 	xerror.Assert(fn == nil, "[fn] should not be nil")
 
-	fn(getDefault())
+	fn(New(getDefault().WithOptions(WithCallerSkip(-1))))
+
 
 	logWatchers = append(logWatchers, fn)
 }
 
-var defaultLog = func() *log.XLog {
+func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
 	zapL := xerror.ExitErr(xlog_config.NewZapLogger(cfg)).(*zap.Logger)
-	zl := log.New().SetZapLogger(zapL.WithOptions(WithCaller(true), WithCallerSkip(1)))
-	return zl.Named("xlog").(*log.XLog)
-}()
+	xerror.Exit(Init(zapL))
+}
+
+var defaultLog *log.XLog
 
 func New(zl *zap.Logger) Xlog {
 	xerror.Assert(zl == nil, "[xlog] [zl] should not be nil")
@@ -54,7 +56,7 @@ func Init(zl *zap.Logger) (err error) {
 	defaultLog = log.New().SetZapLogger(zl.WithOptions(WithCaller(true), WithCallerSkip(1)))
 	// 初始化log依赖
 	for i := range logWatchers {
-		logWatchers[i](defaultLog)
+		logWatchers[i](log.New().SetZapLogger(zl.WithOptions(WithCaller(true), WithCallerSkip(0))))
 	}
 	return nil
 }

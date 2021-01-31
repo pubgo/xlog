@@ -2,12 +2,23 @@ package example
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/xlog_config"
 )
+
+var logs xlog.Xlog
+
+func TestMain(m *testing.M) {
+	xlog.Watch(func(log1 xlog.Xlog) {
+		logs = log1.Named("test")
+	})
+
+	os.Exit(m.Run())
+}
 
 func initCfgFromJson() {
 	cfg := `{
@@ -51,6 +62,9 @@ func initCfgFromJson() {
 
 func TestLog(t *testing.T) {
 	xlog.Infof("hello %s", "1234")
+	logs.Info("hello")
+
 	initCfgFromJson()
 	xlog.Infof("hello %s", "1234")
+	logs.Info("hello")
 }
