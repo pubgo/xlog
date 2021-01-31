@@ -14,19 +14,17 @@ func New(zl *zap.Logger) XLog {
 	return log.NewXLog().SetZapLogger(zl)
 }
 
-func Sync(ll ...XLog) (err error) {
+func Sync(logs ...XLog) (err error) {
 	defer xerror.RespErr(&err)
-	if len(ll) == 0 {
-		ll = append(ll, defaultLog)
+
+	if len(logs) == 0 {
+		logs = append(logs, defaultLog)
 	}
 
-	for i := range ll {
-		xl, ok := ll[i].(*log.XLog)
-		if !ok || xl == nil {
-			return xerror.Fmt("the params should be log.XLog type, got(%v)", xl)
-		}
-
-		xerror.Panic(xl.Sync())
+	for i := range logs {
+		xl, ok := logs[i].(*log.XLog)
+		xerror.Assert(!ok || xl == nil, "[xl] should not be nil")
+		xerror.PanicF(xl.Sync(), "[xlog] %#v sync error", xl)
 	}
 
 	return nil
