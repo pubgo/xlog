@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var logs XLog
+var logs Xlog
 
 func TestMain(m *testing.M) {
-	Watch(func(log1 XLog) {
+	Watch(func(log1 Xlog) {
 		logs = log1.Named("test")
 	})
 
@@ -20,6 +20,7 @@ func TestMain(m *testing.M) {
 func TestInfo(t *testing.T) {
 	logs.Info("test")
 
-	assert.Nil(t, SetDefault(GetDevLog().Named("hello")))
-	logs.Info("test")
+	ll := getDefault().Named("hello")
+	assert.NotNil(t, ll)
+	ll.Info("test")
 }

@@ -6,6 +6,7 @@ import (
 )
 
 type Option = zap.Option
+type Field = zap.Field
 
 func WithHooks(hooks ...func(zapcore.Entry) error) Option { return zap.Hooks(hooks...) }
 func WithFields(fs ...Field) Option                       { return zap.Fields(fs...) }

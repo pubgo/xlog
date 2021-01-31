@@ -31,7 +31,7 @@ func initCfgFromJson() {
                 "levelEncoder": "default",
                 "timeEncoder": "default",
                 "durationEncoder": "default",
-                "callerEncoder": "default",
+                "callerEncoder": "full",
                 "nameEncoder": "default"
         },
         "outputPaths": ["stderr"],
@@ -46,14 +46,11 @@ func initCfgFromJson() {
 	})
 
 	xerror.Exit(err)
-	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
+	xerror.Exit(xlog.Init(zl))
 }
 
-func TestXLog(t *testing.T) {
-	initCfgFromJson()
+func TestLog(t *testing.T) {
 	xlog.Infof("hello %s", "1234")
-}
-
-func TestDevLog(t *testing.T) {
+	initCfgFromJson()
 	xlog.Infof("hello %s", "1234")
 }
