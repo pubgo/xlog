@@ -7,14 +7,15 @@ import (
 
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
+	"github.com/pubgo/xlog/xlog_abc"
 	"github.com/pubgo/xlog/xlog_config"
 )
 
-var logs xlog.Xlog
+var logs xlog_abc.Xlog
 
 func TestMain(m *testing.M) {
-	xlog.Watch(func(log1 xlog.Xlog) {
-		logs = log1.Named("test")
+	xlog.Watch(func(logs xlog_abc.Xlog) {
+		logs = logs.Named("test")
 	})
 
 	os.Exit(m.Run())
@@ -63,6 +64,13 @@ func initCfgFromJson() {
 func TestLog(t *testing.T) {
 	xlog.Infof("hello %s", "1234")
 	logs.Info("hello")
+	logs.InfoFn("hello", func(fields *xlog_abc.Fields) {
+		fields.String("ss", "hello1")
+	})
+
+	xlog.InfoFn("", func(fields *xlog_abc.Fields) {
+		fields.String("ss", "hello1")
+	})
 
 	initCfgFromJson()
 	xlog.Infof("hello %s", "1234")

@@ -6,76 +6,97 @@ import (
 	"sync"
 
 	"github.com/pubgo/xerror"
-	"github.com/pubgo/xlog/internal"
+	"github.com/pubgo/xlog/xlog_abc"
 	"go.uber.org/zap"
 )
 
-var fieldsPool = sync.Pool{
-	New: func() interface{} {
-		return make([]zap.Field, 1)
-	},
-}
+var fieldsPool = sync.Pool{New: func() interface{} { return make([]zap.Field, 0, 1) }}
 
-func getFields() []zap.Field { return fieldsPool.Get().([]zap.Field) }
-func put(fields []zap.Field) { fieldsPool.Put(fields[:0]) }
+func getFields() xlog_abc.Fields { return fieldsPool.Get().([]zap.Field) }
+func put(fields []zap.Field)     { fieldsPool.Put(fields[:0]) }
 
-var _ internal.XLog = (*xlog)(nil)
+var _ xlog_abc.Xlog = (*xlog)(nil)
 
-type xlog struct{ *zap.Logger }
-type log func(msg string, fields ...zap.Field)
+type xlog struct{ zl *zap.Logger }
 
-func logHandle(log log, msg string, fn func(fields internal.Fields)) {
+func (log *xlog) DebugFn(msg string, fn func(fields *xlog_abc.Fields)) {
 	var fields = getFields()
 	defer put(fields)
 
-	fn(fields)
-	log(msg, fields...)
+	fn(&fields)
+	log.zl.Debug(msg, fields...)
 }
 
-func (log *xlog) DebugFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Debug, msg, fn)
+func (log *xlog) InfoFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.Info(msg, fields...)
 }
 
-func (log *xlog) InfoFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Info, msg, fn)
+func (log *xlog) WarnFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.Warn(msg, fields...)
 }
 
-func (log *xlog) WarnFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Warn, msg, fn)
+func (log *xlog) ErrorFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.Error(msg, fields...)
 }
 
-func (log *xlog) ErrorFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Error, msg, fn)
+func (log *xlog) DPanicFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.DPanic(msg, fields...)
 }
 
-func (log *xlog) DPanicFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.DPanic, msg, fn)
+func (log *xlog) PanicFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.Panic(msg, fields...)
 }
 
-func (log *xlog) PanicFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Panic, msg, fn)
+func (log *xlog) FatalFn(msg string, fn func(fields *xlog_abc.Fields)) {
+	var fields = getFields()
+	defer put(fields)
+
+	fn(&fields)
+	log.zl.Fatal(msg, fields...)
 }
 
-func (log *xlog) FatalFn(msg string, fn func(fields internal.Fields)) {
-	logHandle(log.Logger.Fatal, msg, fn)
-}
+func New() *xlog { return &xlog{} }
 
-type XLog = xlog
+func (log *xlog) Debug(msg string, fields ...xlog_abc.Field)   { log.zl.Debug(msg, fields...) }
+func (log *xlog) Info(msg string, fields ...xlog_abc.Field)    { log.zl.Info(msg, fields...) }
+func (log *xlog) Warn(msg string, fields ...xlog_abc.Field)    { log.zl.Warn(msg, fields...) }
+func (log *xlog) Warning(msg string, fields ...xlog_abc.Field) { log.zl.Warn(msg, fields...) }
+func (log *xlog) Error(msg string, fields ...xlog_abc.Field)   { log.zl.Error(msg, fields...) }
+func (log *xlog) DPanic(msg string, fields ...xlog_abc.Field)  { log.zl.DPanic(msg, fields...) }
+func (log *xlog) Panic(msg string, fields ...xlog_abc.Field)   { log.zl.Panic(msg, fields...) }
+func (log *xlog) Fatal(msg string, fields ...xlog_abc.Field)   { log.zl.Fatal(msg, fields...) }
 
-func New() *xlog                                           { return &xlog{} }
-func (log *xlog) Warningf(format string, a ...interface{}) { log.Warningf(format, a...) }
-func (log *xlog) Debugf(format string, a ...interface{})   { log.Logger.Debug(fmt.Sprintf(format, a...)) }
-func (log *xlog) Infof(format string, a ...interface{})    { log.Logger.Info(fmt.Sprintf(format, a...)) }
-func (log *xlog) Warnf(format string, a ...interface{})    { log.Logger.Warn(fmt.Sprintf(format, a...)) }
-func (log *xlog) Errorf(format string, a ...interface{})   { log.Logger.Error(fmt.Sprintf(format, a...)) }
-func (log *xlog) DPanicf(format string, a ...interface{}) {
-	log.Logger.DPanic(fmt.Sprintf(format, a...))
-}
-func (log *xlog) Panicf(format string, a ...interface{})       { log.Logger.Panic(fmt.Sprintf(format, a...)) }
-func (log *xlog) Fatalf(format string, a ...interface{})       { log.Logger.Fatal(fmt.Sprintf(format, a...)) }
-func (log *xlog) Warning(msg string, fields ...internal.Field) { log.Logger.Warn(msg, fields...) }
-func (log *xlog) With(fields ...zap.Field) internal.XLog       { return &xlog{log.Logger.With(fields...)} }
-func (log *xlog) Sync() error                                  { return xerror.Wrap(log.Logger.Sync()) }
+func (log *xlog) Warningf(format string, a ...interface{}) { log.zl.Warn(fmt.Sprintf(format, a...)) }
+func (log *xlog) Debugf(format string, a ...interface{})   { log.zl.Debug(fmt.Sprintf(format, a...)) }
+func (log *xlog) Infof(format string, a ...interface{})    { log.zl.Info(fmt.Sprintf(format, a...)) }
+func (log *xlog) Warnf(format string, a ...interface{})    { log.zl.Warn(fmt.Sprintf(format, a...)) }
+func (log *xlog) Errorf(format string, a ...interface{})   { log.zl.Error(fmt.Sprintf(format, a...)) }
+func (log *xlog) DPanicf(format string, a ...interface{})  { log.zl.DPanic(fmt.Sprintf(format, a...)) }
+func (log *xlog) Panicf(format string, a ...interface{})   { log.zl.Panic(fmt.Sprintf(format, a...)) }
+func (log *xlog) Fatalf(format string, a ...interface{})   { log.zl.Fatal(fmt.Sprintf(format, a...)) }
+
+func (log *xlog) With(fields ...zap.Field) xlog_abc.Xlog { return &xlog{log.zl.With(fields...)} }
+func (log *xlog) Sync() error                            { return xerror.Wrap(log.zl.Sync()) }
 
 func (log *xlog) SetZapLogger(zl *zap.Logger) *xlog {
 	if zl == nil {
@@ -83,14 +104,19 @@ func (log *xlog) SetZapLogger(zl *zap.Logger) *xlog {
 		return log
 	}
 
-	log.Logger = zl
+	log.zl = zl
 	return log
 }
 
-func (log *xlog) Named(s string, opts ...zap.Option) internal.XLog {
-	if strings.TrimSpace(s) == "" {
-		return log
+func (log *xlog) Named(s string, opts ...zap.Option) xlog_abc.Xlog {
+	zl := log.zl
+	if len(opts) > 0 {
+		zl = zl.WithOptions(opts...)
 	}
 
-	return &xlog{log.Logger.Named(s).WithOptions(opts...)}
+	if strings.TrimSpace(s) != "" {
+		zl = zl.Named(s)
+	}
+
+	return &xlog{zl: zl}
 }

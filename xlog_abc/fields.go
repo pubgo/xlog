@@ -1,4 +1,4 @@
-package internal
+package xlog_abc
 
 import (
 	"fmt"

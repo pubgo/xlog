@@ -84,7 +84,7 @@ func NewZapLogger(conf Config, opts ...option) (*zap.Logger, error) {
 }
 
 func NewDevConfig(opts ...option) Config {
-	return Config{
+	cfg := Config{
 		Level:       "debug",
 		Development: true,
 		Encoding:    "console",
@@ -103,11 +103,13 @@ func NewDevConfig(opts ...option) Config {
 		},
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
-	}.handleOpts(opts...)
+	}
+
+	return cfg.handleOpts(opts...)
 }
 
 func NewProdConfig(opts ...option) Config {
-	return Config{
+	cfg := Config{
 		Level:       "info",
 		Development: false,
 		Sampling: &samplingConfig{
@@ -130,5 +132,7 @@ func NewProdConfig(opts ...option) Config {
 		},
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
-	}.handleOpts(opts...)
+	}
+
+	return cfg.handleOpts(opts...)
 }
