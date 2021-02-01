@@ -11,11 +11,11 @@ import (
 	"github.com/pubgo/xlog/xlog_config"
 )
 
-var logs xlog_abc.Xlog
+var log xlog_abc.Xlog
 
 func TestMain(m *testing.M) {
 	xlog.Watch(func(logs xlog_abc.Xlog) {
-		logs = logs.Named("test")
+		log = logs.Named("test")
 	})
 
 	os.Exit(m.Run())
@@ -63,8 +63,8 @@ func initCfgFromJson() {
 
 func TestLog(t *testing.T) {
 	xlog.Infof("hello %s", "1234")
-	logs.Info("hello")
-	logs.InfoFn("hello", func(fields *xlog_abc.Fields) {
+	log.Info("hello")
+	log.InfoFn("hello", func(fields *xlog_abc.Fields) {
 		fields.String("ss", "hello1")
 	})
 
@@ -74,5 +74,5 @@ func TestLog(t *testing.T) {
 
 	initCfgFromJson()
 	xlog.Infof("hello %s", "1234")
-	logs.Info("hello")
+	log.Info("hello")
 }
