@@ -14,6 +14,7 @@ import (
 var log xlog_abc.Xlog
 
 func TestMain(m *testing.M) {
+	xlog.With()
 	xlog.Watch(func(logs xlog_abc.Xlog) {
 		log = logs.Named("test")
 	})
@@ -58,7 +59,7 @@ func initCfgFromJson() {
 	})
 
 	xerror.Exit(err)
-	xerror.Exit(xlog.Init(zl))
+	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
 }
 
 func TestLog(t *testing.T) {

@@ -27,7 +27,7 @@ func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
 	zapL := xerror.ExitErr(xlog_config.NewZapLogger(cfg)).(*zap.Logger)
-	xerror.Exit(Init(zapL))
+	xerror.Exit(SetDefault(New(zapL)))
 }
 
 var defaultLog xlog_abc.Xlog
@@ -42,16 +42,16 @@ func getDefault() xlog_abc.Xlog {
 		return defaultLog
 	}
 
-	xerror.Exit(errors.New("please init defaultLog"))
+	xerror.Exit(errors.New("[xlog] please init defaultLog"))
 	return nil
 }
 
-func Init(zl *zap.Logger) (err error) {
+func SetDefault(lg xlog_abc.Xlog) (err error) {
 	xerror.RespErr(&err)
 
-	xerror.Assert(zl == nil, "[xlog] [zl] should not be nil")
-	logW := log.New().SetZapLogger(zl.WithOptions(zap.WithCaller(true), zap.AddCallerSkip(1)))
-	defaultLog = logW.Named("", zap.AddCallerSkip(1))
+	xerror.Assert(lg == nil, "[xlog] [zl] should not be nil")
+	logW := lg.Named("xlog", zap.WithCaller(true), zap.AddCallerSkip(1))
+	defaultLog = logW.Named("debug", zap.AddCallerSkip(1))
 
 	// 初始化log依赖
 	for i := range logWatchers {
@@ -60,15 +60,17 @@ func Init(zl *zap.Logger) (err error) {
 	return nil
 }
 
-func Debug(msg string, fields ...zap.Field)            { getDefault().Debug(msg, fields...) }
-func Info(msg string, fields ...zap.Field)             { getDefault().Info(msg, fields...) }
-func Warn(msg string, fields ...zap.Field)             { getDefault().Warn(msg, fields...) }
-func Error(msg string, fields ...zap.Field)            { getDefault().Error(msg, fields...) }
-func DPanic(msg string, fields ...zap.Field)           { getDefault().DPanic(msg, fields...) }
-func Panic(msg string, fields ...zap.Field)            { getDefault().Panic(msg, fields...) }
-func Fatal(msg string, fields ...zap.Field)            { getDefault().Fatal(msg, fields...) }
 func With(fields ...zap.Field) xlog_abc.Xlog           { return getDefault().With(fields...) }
 func Named(s string, opts ...zap.Option) xlog_abc.Xlog { return getDefault().Named(s, opts...) }
+func Sync() error                                      { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
+
+func Debug(msg string, fields ...zap.Field)  { getDefault().Debug(msg, fields...) }
+func Info(msg string, fields ...zap.Field)   { getDefault().Info(msg, fields...) }
+func Warn(msg string, fields ...zap.Field)   { getDefault().Warn(msg, fields...) }
+func Error(msg string, fields ...zap.Field)  { getDefault().Error(msg, fields...) }
+func DPanic(msg string, fields ...zap.Field) { getDefault().DPanic(msg, fields...) }
+func Panic(msg string, fields ...zap.Field)  { getDefault().Panic(msg, fields...) }
+func Fatal(msg string, fields ...zap.Field)  { getDefault().Fatal(msg, fields...) }
 
 func Debugf(format string, a ...interface{})  { getDefault().Debug(fmt.Sprintf(format, a...)) }
 func Infof(format string, a ...interface{})   { getDefault().Info(fmt.Sprintf(format, a...)) }
