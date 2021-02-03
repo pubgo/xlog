@@ -3,113 +3,57 @@ package log
 import (
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/xlog_abc"
 	"go.uber.org/zap"
 )
 
-var fieldsPool = sync.Pool{New: func() interface{} { return make([]zap.Field, 0, 1) }}
-
-func getFields() xlog_abc.Fields { return fieldsPool.Get().([]zap.Field) }
-func put(fields []zap.Field)     { fieldsPool.Put(fields[:0]) }
-
 var _ xlog_abc.Xlog = (*xlog)(nil)
-
-type xlog struct{ zl *zap.Logger }
-
-func (log *xlog) DebugFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Debug(msg, fields...)
-}
-
-func (log *xlog) InfoFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Info(msg, fields...)
-}
-
-func (log *xlog) WarnFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Warn(msg, fields...)
-}
-
-func (log *xlog) ErrorFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Error(msg, fields...)
-}
-
-func (log *xlog) DPanicFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.DPanic(msg, fields...)
-}
-
-func (log *xlog) PanicFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Panic(msg, fields...)
-}
-
-func (log *xlog) FatalFn(msg string, fn func(fields *xlog_abc.Fields)) {
-	var fields = getFields()
-	defer put(fields)
-
-	fn(&fields)
-	log.zl.Fatal(msg, fields...)
-}
 
 func New() *xlog { return &xlog{} }
 
-func (log *xlog) Debug(msg string, fields ...xlog_abc.Field)   { log.zl.Debug(msg, fields...) }
-func (log *xlog) Info(msg string, fields ...xlog_abc.Field)    { log.zl.Info(msg, fields...) }
-func (log *xlog) Warn(msg string, fields ...xlog_abc.Field)    { log.zl.Warn(msg, fields...) }
-func (log *xlog) Warning(msg string, fields ...xlog_abc.Field) { log.zl.Warn(msg, fields...) }
-func (log *xlog) Error(msg string, fields ...xlog_abc.Field)   { log.zl.Error(msg, fields...) }
-func (log *xlog) DPanic(msg string, fields ...xlog_abc.Field)  { log.zl.DPanic(msg, fields...) }
-func (log *xlog) Panic(msg string, fields ...xlog_abc.Field)   { log.zl.Panic(msg, fields...) }
-func (log *xlog) Fatal(msg string, fields ...xlog_abc.Field)   { log.zl.Fatal(msg, fields...) }
+type xlog struct{ zl *zap.Logger }
 
-func (log *xlog) Warningf(format string, a ...interface{}) { log.zl.Warn(fmt.Sprintf(format, a...)) }
-func (log *xlog) Debugf(format string, a ...interface{})   { log.zl.Debug(fmt.Sprintf(format, a...)) }
-func (log *xlog) Infof(format string, a ...interface{})    { log.zl.Info(fmt.Sprintf(format, a...)) }
-func (log *xlog) Warnf(format string, a ...interface{})    { log.zl.Warn(fmt.Sprintf(format, a...)) }
-func (log *xlog) Errorf(format string, a ...interface{})   { log.zl.Error(fmt.Sprintf(format, a...)) }
-func (log *xlog) DPanicf(format string, a ...interface{})  { log.zl.DPanic(fmt.Sprintf(format, a...)) }
-func (log *xlog) Panicf(format string, a ...interface{})   { log.zl.Panic(fmt.Sprintf(format, a...)) }
-func (log *xlog) Fatalf(format string, a ...interface{})   { log.zl.Fatal(fmt.Sprintf(format, a...)) }
+func (t *xlog) DebugM(msg string, m xlog_abc.M)  { t.zl.Debug(msg, zap.Any("map", m)) }
+func (t *xlog) InfoM(msg string, m xlog_abc.M)   { t.zl.Info(msg, zap.Any("map", m)) }
+func (t *xlog) WarnM(msg string, m xlog_abc.M)   { t.zl.Warn(msg, zap.Any("map", m)) }
+func (t *xlog) ErrorM(msg string, m xlog_abc.M)  { t.zl.Error(msg, zap.Any("map", m)) }
+func (t *xlog) DPanicM(msg string, m xlog_abc.M) { t.zl.DPanic(msg, zap.Any("map", m)) }
+func (t *xlog) PanicM(msg string, m xlog_abc.M)  { t.zl.Panic(msg, zap.Any("map", m)) }
+func (t *xlog) FatalM(msg string, m xlog_abc.M)  { t.zl.Fatal(msg, zap.Any("map", m)) }
 
-func (log *xlog) With(fields ...zap.Field) xlog_abc.Xlog { return &xlog{log.zl.With(fields...)} }
-func (log *xlog) Sync() error                            { return xerror.Wrap(log.zl.Sync()) }
+func (t *xlog) Debug(msg string, fields ...zap.Field)  { t.zl.Debug(msg, fields...) }
+func (t *xlog) Info(msg string, fields ...zap.Field)   { t.zl.Info(msg, fields...) }
+func (t *xlog) Warn(msg string, fields ...zap.Field)   { t.zl.Warn(msg, fields...) }
+func (t *xlog) Error(msg string, fields ...zap.Field)  { t.zl.Error(msg, fields...) }
+func (t *xlog) DPanic(msg string, fields ...zap.Field) { t.zl.DPanic(msg, fields...) }
+func (t *xlog) Panic(msg string, fields ...zap.Field)  { t.zl.Panic(msg, fields...) }
+func (t *xlog) Fatal(msg string, fields ...zap.Field)  { t.zl.Fatal(msg, fields...) }
 
-func (log *xlog) SetZapLogger(zl *zap.Logger) *xlog {
+func (t *xlog) Debugf(format string, a ...interface{})  { t.zl.Debug(fmt.Sprintf(format, a...)) }
+func (t *xlog) Infof(format string, a ...interface{})   { t.zl.Info(fmt.Sprintf(format, a...)) }
+func (t *xlog) Warnf(format string, a ...interface{})   { t.zl.Warn(fmt.Sprintf(format, a...)) }
+func (t *xlog) Errorf(format string, a ...interface{})  { t.zl.Error(fmt.Sprintf(format, a...)) }
+func (t *xlog) DPanicf(format string, a ...interface{}) { t.zl.DPanic(fmt.Sprintf(format, a...)) }
+func (t *xlog) Panicf(format string, a ...interface{})  { t.zl.Panic(fmt.Sprintf(format, a...)) }
+func (t *xlog) Fatalf(format string, a ...interface{})  { t.zl.Fatal(fmt.Sprintf(format, a...)) }
+
+func (t *xlog) With(fields ...zap.Field) xlog_abc.Xlog { return &xlog{zl: t.zl.With(fields...)} }
+func (t *xlog) Sync() error                            { return xerror.Wrap(t.zl.Sync()) }
+
+func (t *xlog) SetZapLogger(zl *zap.Logger) *xlog {
 	if zl == nil {
-		log.Warn("[zl] is nil")
-		return log
+		t.zl.Warn("[zl] is nil")
+		return t
 	}
 
-	log.zl = zl
-	return log
+	t.zl = zl
+	return t
 }
 
-func (log *xlog) Named(s string, opts ...zap.Option) xlog_abc.Xlog {
-	zl := log.zl
+func (t *xlog) Named(s string, opts ...zap.Option) xlog_abc.Xlog {
+	zl := t.zl
 	if len(opts) > 0 {
 		zl = zl.WithOptions(opts...)
 	}

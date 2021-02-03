@@ -2,6 +2,7 @@ package example
 
 import (
 	"encoding/json"
+	"github.com/pubgo/xlog/xlog_fields"
 	"os"
 	"testing"
 
@@ -63,17 +64,17 @@ func initCfgFromJson() {
 }
 
 func TestLog(t *testing.T) {
+	xlog.Info("hello", xlog_fields.String("ss", "hello1"))
 	xlog.Infof("hello %s", "1234")
-	log.Info("hello")
-	log.InfoFn("hello", func(fields *xlog_abc.Fields) {
-		fields.String("ss", "hello1")
-	})
-
-	xlog.InfoFn("", func(fields *xlog_abc.Fields) {
-		fields.String("ss", "hello1")
+	xlog.InfoM("hello %s", xlog.M{
+		"test": "ok",
 	})
 
 	initCfgFromJson()
+	
+	xlog.Info("hello", xlog_fields.String("ss", "hello1"))
 	xlog.Infof("hello %s", "1234")
-	log.Info("hello")
+	xlog.InfoM("hello %s", xlog.M{
+		"test": "ok",
+	})
 }

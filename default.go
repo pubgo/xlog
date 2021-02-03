@@ -11,7 +11,11 @@ import (
 	"go.uber.org/zap"
 )
 
+type Xlog = xlog_abc.Xlog
+type M = xlog_abc.M
+
 var logWatchers []func(log xlog_abc.Xlog)
+var defaultLog xlog_abc.Xlog
 
 func Watch(fn func(logs xlog_abc.Xlog)) {
 	defer xerror.RespExit()
@@ -29,8 +33,6 @@ func init() {
 	zapL := xerror.ExitErr(xlog_config.NewZapLogger(cfg)).(*zap.Logger)
 	xerror.Exit(SetDefault(New(zapL)))
 }
-
-var defaultLog xlog_abc.Xlog
 
 func New(zl *zap.Logger) xlog_abc.Xlog {
 	xerror.Assert(zl == nil, "[xlog] [zl] should not be nil")
@@ -72,6 +74,14 @@ func DPanic(msg string, fields ...zap.Field) { getDefault().DPanic(msg, fields..
 func Panic(msg string, fields ...zap.Field)  { getDefault().Panic(msg, fields...) }
 func Fatal(msg string, fields ...zap.Field)  { getDefault().Fatal(msg, fields...) }
 
+func DebugM(msg string, m M)  { getDefault().DebugM(msg, m) }
+func InfoM(msg string, m M)   { getDefault().InfoM(msg, m) }
+func WarnM(msg string, m M)   { getDefault().WarnM(msg, m) }
+func ErrorM(msg string, m M)  { getDefault().ErrorM(msg, m) }
+func DPanicM(msg string, m M) { getDefault().DPanicM(msg, m) }
+func PanicM(msg string, m M)  { getDefault().PanicM(msg, m) }
+func FatalM(msg string, m M)  { getDefault().FatalM(msg, m) }
+
 func Debugf(format string, a ...interface{})  { getDefault().Debug(fmt.Sprintf(format, a...)) }
 func Infof(format string, a ...interface{})   { getDefault().Info(fmt.Sprintf(format, a...)) }
 func Warnf(format string, a ...interface{})   { getDefault().Warn(fmt.Sprintf(format, a...)) }
@@ -79,11 +89,3 @@ func Errorf(format string, a ...interface{})  { getDefault().Error(fmt.Sprintf(f
 func DPanicf(format string, a ...interface{}) { getDefault().DPanic(fmt.Sprintf(format, a...)) }
 func Panicf(format string, a ...interface{})  { getDefault().Panic(fmt.Sprintf(format, a...)) }
 func Fatalf(format string, a ...interface{})  { getDefault().Fatal(fmt.Sprintf(format, a...)) }
-
-func FatalFn(msg string, fn func(fields *xlog_abc.Fields))  { getDefault().FatalFn(msg, fn) }
-func PanicFn(msg string, fn func(fields *xlog_abc.Fields))  { getDefault().PanicFn(msg, fn) }
-func DPanicFn(msg string, fn func(fields *xlog_abc.Fields)) { getDefault().DPanicFn(msg, fn) }
-func ErrorFn(msg string, fn func(fields *xlog_abc.Fields))  { getDefault().ErrorFn(msg, fn) }
-func WarnFn(msg string, fn func(fields *xlog_abc.Fields))   { getDefault().WarnFn(msg, fn) }
-func InfoFn(msg string, fn func(fields *xlog_abc.Fields))   { getDefault().InfoFn(msg, fn) }
-func DebugFn(msg string, fn func(fields *xlog_abc.Fields))  { getDefault().DebugFn(msg, fn) }
