@@ -1,4 +1,4 @@
-package xlog_fields
+package xlog
 
 import (
 	"fmt"
