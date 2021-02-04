@@ -2,7 +2,6 @@ package xlog
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal/log"
@@ -82,10 +81,10 @@ func DPanicM(msg string, m M) { getDefault().DPanicM(msg, m) }
 func PanicM(msg string, m M)  { getDefault().PanicM(msg, m) }
 func FatalM(msg string, m M)  { getDefault().FatalM(msg, m) }
 
-func Debugf(format string, a ...interface{})  { getDefault().Debug(fmt.Sprintf(format, a...)) }
-func Infof(format string, a ...interface{})   { getDefault().Info(fmt.Sprintf(format, a...)) }
-func Warnf(format string, a ...interface{})   { getDefault().Warn(fmt.Sprintf(format, a...)) }
-func Errorf(format string, a ...interface{})  { getDefault().Error(fmt.Sprintf(format, a...)) }
-func DPanicf(format string, a ...interface{}) { getDefault().DPanic(fmt.Sprintf(format, a...)) }
-func Panicf(format string, a ...interface{})  { getDefault().Panic(fmt.Sprintf(format, a...)) }
-func Fatalf(format string, a ...interface{})  { getDefault().Fatal(fmt.Sprintf(format, a...)) }
+func Debugf(format string, a ...interface{})  { getDefault().Debugf(format, a...) }
+func Infof(format string, a ...interface{})   { getDefault().Infof(format, a...) }
+func Warnf(format string, a ...interface{})   { getDefault().Warnf(format, a...) }
+func Errorf(format string, a ...interface{})  { getDefault().Errorf(format, a...) }
+func DPanicf(format string, a ...interface{}) { getDefault().DPanicf(format, a...) }
+func Panicf(format string, a ...interface{})  { getDefault().Panicf(format, a...) }
+func Fatalf(format string, a ...interface{})  { getDefault().Fatalf(format, a...) }
