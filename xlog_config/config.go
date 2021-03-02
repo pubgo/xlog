@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/pubgo/xerror"
+	"github.com/pubgo/xlog/internal"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -57,23 +58,23 @@ func (t Config) toZapLogger() (_ *zap.Logger, err error) {
 	xerror.Panic(json.Unmarshal(xerror.PanicBytes(json.Marshal(&t)), &zapCfg))
 
 	key := t.EncoderConfig.EncodeLevel
-	key = xerror.If(key != "", key, defaultKey).(string)
+	key = internal.If(key != "", key, defaultKey).(string)
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
 
 	key = t.EncoderConfig.EncodeTime
-	key = xerror.If(key != "", key, defaultKey).(string)
+	key = internal.If(key != "", key, defaultKey).(string)
 	zapCfg.EncoderConfig.EncodeTime = timeEncoder[key]
 
 	key = t.EncoderConfig.EncodeDuration
-	key = xerror.If(key != "", key, defaultKey).(string)
+	key = internal.If(key != "", key, defaultKey).(string)
 	zapCfg.EncoderConfig.EncodeDuration = durationEncoder[key]
 
 	key = t.EncoderConfig.EncodeCaller
-	key = xerror.If(key != "", key, defaultKey).(string)
+	key = internal.If(key != "", key, defaultKey).(string)
 	zapCfg.EncoderConfig.EncodeCaller = callerEncoder[key]
 
 	key = t.EncoderConfig.EncodeName
-	key = xerror.If(key != "", key, defaultKey).(string)
+	key = internal.If(key != "", key, defaultKey).(string)
 	zapCfg.EncoderConfig.EncodeName = nameEncoder[key]
 
 	return xerror.PanicErr(zapCfg.Build()).(*zap.Logger), nil
