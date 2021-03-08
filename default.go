@@ -65,21 +65,21 @@ func With(fields ...zap.Field) xlog_abc.Xlog           { return getDefault().Wit
 func Named(s string, opts ...zap.Option) xlog_abc.Xlog { return getDefault().Named(s, opts...) }
 func Sync() error                                      { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
 
-func Debug(msg string, fields ...zap.Field)  { getDefault().Debug(msg, fields...) }
-func Info(msg string, fields ...zap.Field)   { getDefault().Info(msg, fields...) }
-func Warn(msg string, fields ...zap.Field)   { getDefault().Warn(msg, fields...) }
-func Error(msg string, fields ...zap.Field)  { getDefault().Error(msg, fields...) }
-func DPanic(msg string, fields ...zap.Field) { getDefault().DPanic(msg, fields...) }
-func Panic(msg string, fields ...zap.Field)  { getDefault().Panic(msg, fields...) }
-func Fatal(msg string, fields ...zap.Field)  { getDefault().Fatal(msg, fields...) }
+func Debug(fields ...interface{})  { getDefault().Debug(fields...) }
+func Info(fields ...interface{})   { getDefault().Info(fields...) }
+func Warn(fields ...interface{})   { getDefault().Warn(fields...) }
+func Error(fields ...interface{})  { getDefault().Error(fields...) }
+func DPanic(fields ...interface{}) { getDefault().DPanic(fields...) }
+func Panic(fields ...interface{})  { getDefault().Panic(fields...) }
+func Fatal(fields ...interface{})  { getDefault().Fatal(fields...) }
 
-func DebugM(msg string, m M)  { getDefault().DebugM(msg, m) }
-func InfoM(msg string, m M)   { getDefault().InfoM(msg, m) }
-func WarnM(msg string, m M)   { getDefault().WarnM(msg, m) }
-func ErrorM(msg string, m M)  { getDefault().ErrorM(msg, m) }
-func DPanicM(msg string, m M) { getDefault().DPanicM(msg, m) }
-func PanicM(msg string, m M)  { getDefault().PanicM(msg, m) }
-func FatalM(msg string, m M)  { getDefault().FatalM(msg, m) }
+func DebugM(msg string, m M)  { getDefault().Debug(msg, m) }
+func InfoM(msg string, m M)   { getDefault().Info(msg, m) }
+func WarnM(msg string, m M)   { getDefault().Warn(msg, m) }
+func ErrorM(msg string, m M)  { getDefault().Error(msg, m) }
+func DPanicM(msg string, m M) { getDefault().DPanic(msg, m) }
+func PanicM(msg string, m M)  { getDefault().Panic(msg, m) }
+func FatalM(msg string, m M)  { getDefault().Fatal(msg, m) }
 
 func Debugf(format string, a ...interface{})  { getDefault().Debugf(format, a...) }
 func Infof(format string, a ...interface{})   { getDefault().Infof(format, a...) }

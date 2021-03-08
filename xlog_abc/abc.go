@@ -6,21 +6,13 @@ import (
 
 type M map[string]interface{}
 type Xlog interface {
-	Debug(msg string, fields ...zap.Field)
-	Info(msg string, fields ...zap.Field)
-	Warn(msg string, fields ...zap.Field)
-	Error(msg string, fields ...zap.Field)
-	DPanic(msg string, fields ...zap.Field)
-	Panic(msg string, fields ...zap.Field)
-	Fatal(msg string, fields ...zap.Field)
-
-	DebugM(msg string, m M)
-	InfoM(msg string, m M)
-	WarnM(msg string, m M)
-	ErrorM(msg string, m M)
-	DPanicM(msg string, m M)
-	PanicM(msg string, m M)
-	FatalM(msg string, m M)
+	Debug(args ...interface{})
+	Info(args ...interface{})
+	Warn(args ...interface{})
+	Error(args ...interface{})
+	DPanic(args ...interface{})
+	Panic(args ...interface{})
+	Fatal(args ...interface{})
 
 	Debugf(format string, a ...interface{})
 	Infof(format string, a ...interface{})
