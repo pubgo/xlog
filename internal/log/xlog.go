@@ -22,8 +22,8 @@ func (t *xlog) fields(args ...interface{}) (string, []zap.Field) {
 		return msg, nil
 	}
 
-	var fields = make([]zap.Field, len(args))
-	var fields1 = make([]interface{}, len(args))
+	var fields = make([]zap.Field, 0, len(args))
+	var fields1 = make([]interface{}, 0, len(args))
 	for i := range args {
 		field := args[i]
 		if field == nil {

@@ -86,9 +86,10 @@ func NewZapLogger(conf Config, opts ...option) (*zap.Logger, error) {
 
 func NewDevConfig(opts ...option) Config {
 	cfg := Config{
-		Level:       "debug",
-		Development: true,
-		Encoding:    "console",
+		Level:             "debug",
+		Development:       true,
+		Encoding:          "console",
+		DisableStacktrace: true,
 		EncoderConfig: encoderConfig{
 			TimeKey:        "T",
 			LevelKey:       "L",
@@ -117,7 +118,8 @@ func NewProdConfig(opts ...option) Config {
 			Initial:    100,
 			Thereafter: 100,
 		},
-		Encoding: "json",
+		Encoding:          "json",
+		DisableStacktrace: true,
 		EncoderConfig: encoderConfig{
 			TimeKey:        "ts",
 			LevelKey:       "level",

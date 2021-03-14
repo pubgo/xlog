@@ -60,6 +60,7 @@ func initCfgFromJson() {
 
 	xerror.Exit(err)
 	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
+	xlog.Warn("test")
 }
 
 func TestLog(t *testing.T) {
@@ -68,6 +69,7 @@ func TestLog(t *testing.T) {
 	xlog.InfoM("hello %s", xlog.M{
 		"test": "ok",
 	})
+	xlog.Warn("test")
 
 	initCfgFromJson()
 
@@ -76,4 +78,5 @@ func TestLog(t *testing.T) {
 	xlog.InfoM("hello %s", xlog.M{
 		"test": "ok",
 	})
+	xlog.Warn("test")
 }
