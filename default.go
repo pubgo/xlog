@@ -51,8 +51,8 @@ func SetDefault(lg xlog_abc.Xlog) (err error) {
 	xerror.RespErr(&err)
 
 	xerror.Assert(lg == nil, "[xlog] [zl] should not be nil")
-	logW := lg.Named("xlog", zap.WithCaller(true), zap.AddCallerSkip(1))
-	defaultLog = logW.Named("debug", zap.AddCallerSkip(1))
+	logW := lg.Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
+	defaultLog = logW.Named("", zap.AddCallerSkip(1))
 
 	// 初始化log依赖
 	for i := range logWatchers {
