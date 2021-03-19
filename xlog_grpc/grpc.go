@@ -23,4 +23,4 @@ func (l *loggerWrapper) Errorf(format string, args ...interface{})   { l.log.Err
 func (l *loggerWrapper) Fatal(args ...interface{})                   { l.log.Fatal(args...) }
 func (l *loggerWrapper) Fatalln(args ...interface{})                 { l.log.Fatal(args...) }
 func (l *loggerWrapper) Fatalf(format string, args ...interface{})   { l.log.Fatalf(format, args...) }
-func (l *loggerWrapper) V(v int) bool                                { return true }
+func (l *loggerWrapper) V(_ int) bool                                { return true }
