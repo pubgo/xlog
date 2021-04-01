@@ -80,3 +80,9 @@ func initCfgFromJsonDebug(name string) internal.XLog {
 	return xlog.New(zl.WithOptions(xlog.AddCallerSkip(1)))
 }
 ```
+
+## 日志切割
+https://github.com/natefinch/lumberjack
+
+## 日志分析
+https://github.com/allinurl/goaccess

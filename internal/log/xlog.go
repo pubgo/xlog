@@ -15,6 +15,10 @@ func New() *xlog { return &xlog{} }
 
 type xlog struct{ zl *zap.Logger }
 
+func (t *xlog) Enabled() bool {
+	return t.zl.Core().Enabled(zap.InfoLevel)
+}
+
 func fields(args ...interface{}) (string, []zap.Field) {
 	var msg = ""
 
@@ -115,7 +119,7 @@ func (t *xlog) Fatal(args ...interface{}) {
 	t.zl.Fatal(msg, fields...)
 }
 
-func (t *xlog) Debugf(format string, a ...interface{})  {
+func (t *xlog) Debugf(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.DebugLevel) {
 		return
 	}
@@ -123,7 +127,7 @@ func (t *xlog) Debugf(format string, a ...interface{})  {
 	t.zl.Debug(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Infof(format string, a ...interface{})   {
+func (t *xlog) Infof(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.InfoLevel) {
 		return
 	}
@@ -131,7 +135,7 @@ func (t *xlog) Infof(format string, a ...interface{})   {
 	t.zl.Info(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Warnf(format string, a ...interface{})   {
+func (t *xlog) Warnf(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.WarnLevel) {
 		return
 	}
@@ -139,7 +143,7 @@ func (t *xlog) Warnf(format string, a ...interface{})   {
 	t.zl.Warn(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Errorf(format string, a ...interface{})  {
+func (t *xlog) Errorf(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.ErrorLevel) {
 		return
 	}
@@ -155,7 +159,7 @@ func (t *xlog) DPanicf(format string, a ...interface{}) {
 	t.zl.DPanic(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Panicf(format string, a ...interface{})  {
+func (t *xlog) Panicf(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.PanicLevel) {
 		return
 	}
@@ -163,7 +167,7 @@ func (t *xlog) Panicf(format string, a ...interface{})  {
 	t.zl.Panic(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Fatalf(format string, a ...interface{})  {
+func (t *xlog) Fatalf(format string, a ...interface{}) {
 	if !t.zl.Core().Enabled(zap.FatalLevel) {
 		return
 	}

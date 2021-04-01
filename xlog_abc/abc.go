@@ -6,6 +6,8 @@ import (
 
 type M map[string]interface{}
 type Xlog interface {
+	Enabled() bool
+	
 	Debug(args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})

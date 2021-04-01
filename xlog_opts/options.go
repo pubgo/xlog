@@ -15,6 +15,7 @@ func Development() Option                               { return zap.Development
 func AddCaller() Option                                 { return zap.AddCaller() }
 func WithCaller(enabled bool) Option                    { return zap.WithCaller(enabled) }
 func AddCallerSkip(skip int) Option                     { return zap.AddCallerSkip(skip) }
+func WithCallDepth(skip int) Option                     { return zap.AddCallerSkip(skip) }
 func AddStacktrace(lvl zapcore.LevelEnabler) Option     { return zap.AddStacktrace(lvl) }
 func IncreaseLevel(lvl zapcore.LevelEnabler) Option     { return zap.IncreaseLevel(lvl) }
 func OnFatal(action zapcore.CheckWriteAction) Option    { return zap.OnFatal(action) }
