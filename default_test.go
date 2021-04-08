@@ -24,6 +24,9 @@ func TestInfo(t *testing.T) {
 }
 
 func TestInfoFn(t *testing.T) {
+	Debug("ok11")
+	logs.Debug("dddd2")
+
 	DebugW(func(log xlog_abc.Logger) {
 		log.Println("ok111")
 		log.Println("ok111")

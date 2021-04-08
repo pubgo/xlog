@@ -22,7 +22,7 @@ func Watch(fn func(logs xlog_abc.Xlog)) {
 
 	xerror.Assert(fn == nil, "[fn] should not be nil")
 
-	fn(getDefault().Named("", zap.AddCallerSkip(-1)))
+	fn(getDefault())
 
 	logWatchers = append(logWatchers, fn)
 }
@@ -31,7 +31,7 @@ func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
 	zapL := xerror.ExitErr(xlog_config.NewZapLogger(cfg)).(*zap.Logger)
-	xerror.Exit(SetDefault(New(zapL)))
+	defaultLog = New(zapL).Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
 }
 
 func New(zl *zap.Logger) xlog_abc.Xlog {
@@ -48,16 +48,19 @@ func getDefault() xlog_abc.Xlog {
 	return nil
 }
 
+func getDefaultNext() xlog_abc.Xlog {
+	return getDefault().Named("", xlog_opts.AddCallerSkip(1))
+}
+
 func SetDefault(lg xlog_abc.Xlog) (err error) {
 	xerror.RespErr(&err)
 
 	xerror.Assert(lg == nil, "[xlog] [zl] should not be nil")
-	logW := lg.Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
-	defaultLog = logW.Named("", zap.AddCallerSkip(1))
+	defaultLog = lg.Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
 
 	// 初始化log依赖
 	for i := range logWatchers {
-		logWatchers[i](logW)
+		logWatchers[i](defaultLog)
 	}
 	return nil
 }
@@ -66,54 +69,34 @@ func With(fields ...zap.Field) xlog_abc.Xlog           { return getDefault().Wit
 func Named(s string, opts ...zap.Option) xlog_abc.Xlog { return getDefault().Named(s, opts...) }
 func Sync() error                                      { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
 
-func Debug(fields ...interface{})  { getDefault().Debug(fields...) }
-func Info(fields ...interface{})   { getDefault().Info(fields...) }
-func Warn(fields ...interface{})   { getDefault().Warn(fields...) }
-func Error(fields ...interface{})  { getDefault().Error(fields...) }
-func DPanic(fields ...interface{}) { getDefault().DPanic(fields...) }
-func Panic(fields ...interface{})  { getDefault().Panic(fields...) }
-func Fatal(fields ...interface{})  { getDefault().Fatal(fields...) }
+func Debug(fields ...interface{})  { getDefaultNext().Debug(fields...) }
+func Info(fields ...interface{})   { getDefaultNext().Info(fields...) }
+func Warn(fields ...interface{})   { getDefaultNext().Warn(fields...) }
+func Error(fields ...interface{})  { getDefaultNext().Error(fields...) }
+func DPanic(fields ...interface{}) { getDefaultNext().DPanic(fields...) }
+func Panic(fields ...interface{})  { getDefaultNext().Panic(fields...) }
+func Fatal(fields ...interface{})  { getDefaultNext().Fatal(fields...) }
 
-func DebugM(msg string, m M)  { getDefault().Debug(msg, m) }
-func InfoM(msg string, m M)   { getDefault().Info(msg, m) }
-func WarnM(msg string, m M)   { getDefault().Warn(msg, m) }
-func ErrorM(msg string, m M)  { getDefault().Error(msg, m) }
-func DPanicM(msg string, m M) { getDefault().DPanic(msg, m) }
-func PanicM(msg string, m M)  { getDefault().Panic(msg, m) }
-func FatalM(msg string, m M)  { getDefault().Fatal(msg, m) }
+func DebugM(msg string, m M)  { getDefaultNext().Debug(msg, m) }
+func InfoM(msg string, m M)   { getDefaultNext().Info(msg, m) }
+func WarnM(msg string, m M)   { getDefaultNext().Warn(msg, m) }
+func ErrorM(msg string, m M)  { getDefaultNext().Error(msg, m) }
+func DPanicM(msg string, m M) { getDefaultNext().DPanic(msg, m) }
+func PanicM(msg string, m M)  { getDefaultNext().Panic(msg, m) }
+func FatalM(msg string, m M)  { getDefaultNext().Fatal(msg, m) }
 
-func DebugW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).DebugW(fn)
-}
+func Debugf(format string, a ...interface{})  { getDefaultNext().Debugf(format, a...) }
+func Infof(format string, a ...interface{})   { getDefaultNext().Infof(format, a...) }
+func Warnf(format string, a ...interface{})   { getDefaultNext().Warnf(format, a...) }
+func Errorf(format string, a ...interface{})  { getDefaultNext().Errorf(format, a...) }
+func DPanicf(format string, a ...interface{}) { getDefaultNext().DPanicf(format, a...) }
+func Panicf(format string, a ...interface{})  { getDefaultNext().Panicf(format, a...) }
+func Fatalf(format string, a ...interface{})  { getDefaultNext().Fatalf(format, a...) }
 
-func InfoW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).InfoW(fn)
-}
-
-func WarnW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).WarnW(fn)
-}
-
-func ErrorW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).ErrorW(fn)
-}
-
-func DPanicW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).DPanicW(fn)
-}
-
-func PanicW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).PanicW(fn)
-}
-
-func FatalW(fn func(log xlog_abc.Logger)) {
-	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).FatalW(fn)
-}
-
-func Debugf(format string, a ...interface{})  { getDefault().Debugf(format, a...) }
-func Infof(format string, a ...interface{})   { getDefault().Infof(format, a...) }
-func Warnf(format string, a ...interface{})   { getDefault().Warnf(format, a...) }
-func Errorf(format string, a ...interface{})  { getDefault().Errorf(format, a...) }
-func DPanicf(format string, a ...interface{}) { getDefault().DPanicf(format, a...) }
-func Panicf(format string, a ...interface{})  { getDefault().Panicf(format, a...) }
-func Fatalf(format string, a ...interface{})  { getDefault().Fatalf(format, a...) }
+func DebugW(fn func(log xlog_abc.Logger))  { getDefault().DebugW(fn) }
+func InfoW(fn func(log xlog_abc.Logger))   { getDefault().InfoW(fn) }
+func WarnW(fn func(log xlog_abc.Logger))   { getDefault().WarnW(fn) }
+func ErrorW(fn func(log xlog_abc.Logger))  { getDefault().ErrorW(fn) }
+func DPanicW(fn func(log xlog_abc.Logger)) { getDefault().DPanicW(fn) }
+func PanicW(fn func(log xlog_abc.Logger))  { getDefault().PanicW(fn) }
+func FatalW(fn func(log xlog_abc.Logger))  { getDefault().FatalW(fn) }

@@ -64,6 +64,7 @@ func initCfgFromJson() {
 }
 
 func TestLog(t *testing.T) {
+	log.Info("hello", xlog.String("ss", "hello1"))
 	xlog.Info("hello", xlog.String("ss", "hello1"))
 	xlog.Infof("hello %s", "1234")
 	xlog.InfoM("hello %s", xlog.M{
@@ -79,4 +80,5 @@ func TestLog(t *testing.T) {
 		"test": "ok",
 	})
 	xlog.Warn("test")
+	log.Info("hello", xlog.String("ss", "hello1"))
 }
