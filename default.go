@@ -55,7 +55,7 @@ func getDefaultNext() xlog_abc.Xlog {
 func SetDefault(lg xlog_abc.Xlog) (err error) {
 	xerror.RespErr(&err)
 
-	xerror.Assert(lg == nil, "[xlog] [zl] should not be nil")
+	xerror.Assert(lg == nil, "[xlog] [lg] should not be nil")
 	defaultLog = lg.Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
 
 	// 初始化log依赖
