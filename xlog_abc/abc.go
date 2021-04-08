@@ -6,8 +6,6 @@ import (
 
 type M map[string]interface{}
 type Xlog interface {
-	Enabled() bool
-	
 	Debug(args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})
@@ -15,6 +13,14 @@ type Xlog interface {
 	DPanic(args ...interface{})
 	Panic(args ...interface{})
 	Fatal(args ...interface{})
+
+	DebugW(func(log Logger))
+	InfoW(func(log Logger))
+	WarnW(func(log Logger))
+	ErrorW(func(log Logger))
+	DPanicW(func(log Logger))
+	PanicW(func(log Logger))
+	FatalW(func(log Logger))
 
 	Debugf(format string, a ...interface{})
 	Infof(format string, a ...interface{})
@@ -27,4 +33,11 @@ type Xlog interface {
 	Named(s string, opts ...zap.Option) Xlog
 	With(fields ...zap.Field) Xlog
 	Sync() error
+}
+
+type Logger interface {
+	Printf(format string, v ...interface{})
+	Print(v ...interface{})
+	Println(v ...interface{})
+	PrintM(m M)
 }

@@ -7,16 +7,95 @@ import (
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/xlog_abc"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var _ xlog_abc.Xlog = (*xlog)(nil)
+var _ xlog_abc.Logger = (*xlog)(nil)
 
 func New() *xlog { return &xlog{} }
 
-type xlog struct{ zl *zap.Logger }
+type xlog struct {
+	zl  *zap.Logger
+	lvl zapcore.Level
+}
 
-func (t *xlog) Enabled() bool {
-	return t.zl.Core().Enabled(zap.InfoLevel)
+func (t *xlog) PrintM(m xlog_abc.M) {
+	var fields = make([]zap.Field, 0, len(m))
+	for k, v := range m {
+		fields = append(fields, zap.Any(k, v))
+	}
+	t.zl.Check(t.lvl, "").Write(fields...)
+}
+
+func (t *xlog) Printf(format string, v ...interface{}) {
+	t.zl.Check(t.lvl, fmt.Sprintf(format, v...)).Write()
+}
+
+func (t *xlog) Print(args ...interface{}) {
+	msg, fields := fields(args...)
+	t.zl.Check(t.lvl, msg).Write(fields...)
+}
+
+func (t *xlog) Println(args ...interface{}) {
+	msg, fields := fields(append(args, "\n")...)
+	t.zl.Check(t.lvl, msg).Write(fields...)
+}
+
+func (t *xlog) DebugW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.DebugLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.DebugLevel})
+}
+
+func (t *xlog) InfoW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.InfoLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.InfoLevel})
+}
+
+func (t *xlog) WarnW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.WarnLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.WarnLevel})
+}
+
+func (t *xlog) ErrorW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.ErrorLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.ErrorLevel})
+}
+
+func (t *xlog) DPanicW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.DPanicLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.DPanicLevel})
+}
+
+func (t *xlog) PanicW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.PanicLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.PanicLevel})
+}
+
+func (t *xlog) FatalW(f func(log xlog_abc.Logger)) {
+	if !t.zl.Core().Enabled(zap.FatalLevel) {
+		return
+	}
+
+	f(&xlog{zl: t.zl, lvl: zap.FatalLevel})
 }
 
 func fields(args ...interface{}) (string, []zap.Field) {

@@ -1,4 +1,4 @@
-package zap
+package xlog_opts
 
 import (
 	"go.uber.org/zap"

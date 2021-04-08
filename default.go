@@ -7,6 +7,7 @@ import (
 	"github.com/pubgo/xlog/internal/log"
 	"github.com/pubgo/xlog/xlog_abc"
 	"github.com/pubgo/xlog/xlog_config"
+	"github.com/pubgo/xlog/xlog_opts"
 	"go.uber.org/zap"
 )
 
@@ -80,6 +81,34 @@ func ErrorM(msg string, m M)  { getDefault().Error(msg, m) }
 func DPanicM(msg string, m M) { getDefault().DPanic(msg, m) }
 func PanicM(msg string, m M)  { getDefault().Panic(msg, m) }
 func FatalM(msg string, m M)  { getDefault().Fatal(msg, m) }
+
+func DebugW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).DebugW(fn)
+}
+
+func InfoW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).InfoW(fn)
+}
+
+func WarnW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).WarnW(fn)
+}
+
+func ErrorW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).ErrorW(fn)
+}
+
+func DPanicW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).DPanicW(fn)
+}
+
+func PanicW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).PanicW(fn)
+}
+
+func FatalW(fn func(log xlog_abc.Logger)) {
+	getDefault().Named("", xlog_opts.AddCallerSkip(-1)).FatalW(fn)
+}
 
 func Debugf(format string, a ...interface{})  { getDefault().Debugf(format, a...) }
 func Infof(format string, a ...interface{})   { getDefault().Infof(format, a...) }
