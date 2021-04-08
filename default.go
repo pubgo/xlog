@@ -62,10 +62,13 @@ func SetDefault(lg xlog_abc.Xlog) (err error) {
 	for i := range logWatchers {
 		logWatchers[i](defaultLog)
 	}
-	return nil
+	return
 }
 
+// With
+// Deprecated: please use WithFields
 func With(fields ...zap.Field) xlog_abc.Xlog           { return getDefault().With(fields...) }
+func WithFields(fields ...zap.Field) xlog_abc.Xlog     { return getDefault().With(fields...) }
 func Named(s string, opts ...zap.Option) xlog_abc.Xlog { return getDefault().Named(s, opts...) }
 func Sync() error                                      { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
 
