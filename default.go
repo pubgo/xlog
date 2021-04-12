@@ -12,12 +12,13 @@ import (
 )
 
 type Xlog = xlog_abc.Xlog
+type Logger = xlog_abc.Logger
 type M = xlog_abc.M
 
-var logWatchers []func(log xlog_abc.Xlog)
-var defaultLog xlog_abc.Xlog
+var logWatchers []func(log Xlog)
+var defaultLog Xlog
 
-func Watch(fn func(logs xlog_abc.Xlog)) {
+func Watch(fn func(logs Xlog)) {
 	defer xerror.RespExit()
 
 	xerror.Assert(fn == nil, "[fn] should not be nil")
@@ -34,12 +35,12 @@ func init() {
 	defaultLog = New(zapL).Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
 }
 
-func New(zl *zap.Logger) xlog_abc.Xlog {
+func New(zl *zap.Logger) Xlog {
 	xerror.Assert(zl == nil, "[xlog] [zl] should not be nil")
 	return log.New().SetZapLogger(zl)
 }
 
-func getDefault() xlog_abc.Xlog {
+func getDefault() Xlog {
 	if defaultLog != nil {
 		return defaultLog
 	}
@@ -48,11 +49,11 @@ func getDefault() xlog_abc.Xlog {
 	return nil
 }
 
-func getDefaultNext() xlog_abc.Xlog {
+func getDefaultNext() Xlog {
 	return getDefault().Named("", xlog_opts.AddCallerSkip(1))
 }
 
-func SetDefault(lg xlog_abc.Xlog) (err error) {
+func SetDefault(lg Xlog) (err error) {
 	xerror.RespErr(&err)
 
 	xerror.Assert(lg == nil, "[xlog] [lg] should not be nil")
@@ -67,10 +68,10 @@ func SetDefault(lg xlog_abc.Xlog) (err error) {
 
 // With
 // Deprecated: please use WithFields
-func With(fields ...zap.Field) xlog_abc.Xlog           { return getDefault().With(fields...) }
-func WithFields(fields ...zap.Field) xlog_abc.Xlog     { return getDefault().With(fields...) }
-func Named(s string, opts ...zap.Option) xlog_abc.Xlog { return getDefault().Named(s, opts...) }
-func Sync() error                                      { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
+func With(fields ...zap.Field) Xlog           { return getDefault().With(fields...) }
+func WithFields(fields ...zap.Field) Xlog     { return getDefault().With(fields...) }
+func Named(s string, opts ...zap.Option) Xlog { return getDefault().Named(s, opts...) }
+func Sync() error                             { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
 
 func Debug(fields ...interface{})  { getDefaultNext().Debug(fields...) }
 func Info(fields ...interface{})   { getDefaultNext().Info(fields...) }
@@ -96,10 +97,10 @@ func DPanicf(format string, a ...interface{}) { getDefaultNext().DPanicf(format,
 func Panicf(format string, a ...interface{})  { getDefaultNext().Panicf(format, a...) }
 func Fatalf(format string, a ...interface{})  { getDefaultNext().Fatalf(format, a...) }
 
-func DebugW(fn func(log xlog_abc.Logger))  { getDefault().DebugW(fn) }
-func InfoW(fn func(log xlog_abc.Logger))   { getDefault().InfoW(fn) }
-func WarnW(fn func(log xlog_abc.Logger))   { getDefault().WarnW(fn) }
-func ErrorW(fn func(log xlog_abc.Logger))  { getDefault().ErrorW(fn) }
-func DPanicW(fn func(log xlog_abc.Logger)) { getDefault().DPanicW(fn) }
-func PanicW(fn func(log xlog_abc.Logger))  { getDefault().PanicW(fn) }
-func FatalW(fn func(log xlog_abc.Logger))  { getDefault().FatalW(fn) }
+func DebugW(fn func(log Logger))  { getDefault().DebugW(fn) }
+func InfoW(fn func(log Logger))   { getDefault().InfoW(fn) }
+func WarnW(fn func(log Logger))   { getDefault().WarnW(fn) }
+func ErrorW(fn func(log Logger))  { getDefault().ErrorW(fn) }
+func DPanicW(fn func(log Logger)) { getDefault().DPanicW(fn) }
+func PanicW(fn func(log Logger))  { getDefault().PanicW(fn) }
+func FatalW(fn func(log Logger))  { getDefault().FatalW(fn) }

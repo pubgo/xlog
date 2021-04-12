@@ -4,14 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pubgo/xlog/xlog_abc"
 	"github.com/pubgo/xlog/xlog_opts"
 )
 
-var logs xlog_abc.Xlog
+var logs Xlog
 
 func TestMain(m *testing.M) {
-	Watch(func(log1 xlog_abc.Xlog) {
+	Watch(func(log1 Xlog) {
 		logs = log1.Named("test", xlog_opts.Fields(String("name", "hello")))
 	})
 
@@ -27,12 +26,12 @@ func TestInfoFn(t *testing.T) {
 	Debug("ok11")
 	logs.Debug("dddd2")
 
-	DebugW(func(log xlog_abc.Logger) {
+	DebugW(func(log Logger) {
 		log.Println("ok111")
 		log.Println("ok111")
 	})
 
-	logs.DebugW(func(log xlog_abc.Logger) {
+	logs.DebugW(func(log Logger) {
 		log.Println("sss")
 		log.Print("ok")
 		log.Printf("ok%d", 1)
@@ -41,7 +40,7 @@ func TestInfoFn(t *testing.T) {
 		})
 	})
 
-	logs.InfoW(func(log xlog_abc.Logger) {
+	logs.InfoW(func(log Logger) {
 		log.Println("sss")
 		log.Println("sss")
 		log.Print("ok")
