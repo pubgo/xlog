@@ -1,83 +1,90 @@
 # xlog
-xlog is a simple and easy-to-use logger with zap logger as the bottom abstraction
-
-## 介绍
 xlog是一个对zap logger的简单的封装, 意在简化配置, 增强可控, 简洁易用。
-
 
 ## example
 ```go
-package example_test
+package main
 
 import (
-	"testing"
-	"time"
+	"encoding/json"
 
-	"github.com/pubgo/dix"
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
-	"github.com/pubgo/xlog/internal"
 	"github.com/pubgo/xlog/xlog_config"
 )
 
-var log = xlog.GetLog()
+var log xlog.Xlog
 
 func init() {
-	dix.Go(func(log1 xlog.XLog) {
-		log = log1.
-			Named("service").With(xlog.String("key", "service")).
-			Named("hello").With(xlog.String("key", "hello")).
-			Named("world").With(xlog.String("key", "world"))
+	xlog.Watch(func(logs xlog.Xlog) {
+		log = logs.Named("test")
 	})
 }
 
-func TestExample(t *testing.T) {
-	log.Debug("hello",
-		xlog.Any("hss", "ss"),
-	)
+func main() {
+	log.Info("hello", xlog.String("ss", "hello1"))
+	xlog.Info("hello", xlog.String("ss", "hello1"))
+	xlog.Infof("hello %s", "1234")
+	xlog.InfoM("hello %s", xlog.M{
+		"test": "ok",
+	})
+	xlog.Warn("test")
 
-	dix.Go(initCfgFromJsonDebug(time.Now().Format("2006-01-02 15:04:05")))
+	initCfgFromJson()
 
-	log.Info("hello",
-		xlog.Any("hss", "ss"),
-	)
-	//fmt.Println(dix.Graph())
+	xlog.Info("hello", xlog.String("ss", "hello1"))
+	xlog.Infof("hello %s", "1234")
+	xlog.InfoM("hello %s", xlog.M{
+		"test": "ok",
+	})
+	xlog.Warn("test")
+	log.Info("hello", xlog.String("ss", "hello1"))
+	xlog.WarnW(func(log xlog.Logger) {
+		log.Println("hello w")
+	})
+	log.WarnW(func(log xlog.Logger) {
+		log.Print("hhhh jnjnjnj")
+	})
 }
 
-func initCfgFromJsonDebug(name string) internal.XLog {
+func initCfgFromJson() {
 	cfg := `{
-        "level": "debug",
-        "development": true,
+        "level": "info",
+        "development": false,
         "disableCaller": false,
         "disableStacktrace": false,
-        "sampling": null,
-        "encoding": "console",
-        "encoderConfig": {
-                "messageKey": "M",
-                "levelKey": "L",
-                "timeKey": "T",
-                "nameKey": "N",
-                "callerKey": "C",
-                "stacktraceKey": "S",
-                "lineEnding": "\n",
-                "levelEncoder": "capitalColor",
-                "timeEncoder": "iso8601",
-                "durationEncoder": "string",
-                "callerEncoder": "default",
-                "nameEncoder": ""
+        "sampling": {
+                "initial": 100,
+                "thereafter": 100
         },
-        "outputPaths": [
-                "stderr"
-        ],
-        "errorOutputPaths": [
-                "stderr"
-        ],
+        "encoding": "json",
+        "encoderConfig": {
+                "messageKey": "msg",
+                "levelKey": "level",
+                "timeKey": "ts",
+                "nameKey": "logger",
+                "callerKey": "caller",
+                "stacktraceKey": "stacktrace",
+                "lineEnding": "\n",
+                "levelEncoder": "default",
+                "timeEncoder": "default",
+                "durationEncoder": "default",
+                "callerEncoder": "full",
+                "nameEncoder": "default"
+        },
+        "outputPaths": ["stderr"],
+        "errorOutputPaths": ["stderr"],
         "initialFields": null
 }`
 
-	zl, err := xlog_config.NewZapLoggerFromJson([]byte(cfg), xlog_config.WithEncoding("console"))
+	var cfg1 xlog_config.Config
+	xerror.Exit(json.Unmarshal([]byte(cfg), &cfg1))
+	cfg1.Encoding = "console"
+	zl, err := cfg1.Build()
+
 	xerror.Exit(err)
-	return xlog.New(zl.WithOptions(xlog.AddCallerSkip(1)))
+	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
+	xlog.Warn("test")
 }
 ```
 

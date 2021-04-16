@@ -8,7 +8,7 @@ import (
 )
 
 func Init(log xlog.Xlog) {
-	grpclog.SetLoggerV2(&loggerWrapper{log: log.Named("grpc", xlog_opts.AddCallerSkip(3))})
+	grpclog.SetLoggerV2(&loggerWrapper{log: log.Named("grpc", xlog_opts.AddCallerSkip(4))})
 }
 
 type loggerWrapper struct{ log xlog.Xlog }

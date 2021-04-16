@@ -1,8 +1,7 @@
 package internal
 
-// If exported
-func If(check bool, a, b interface{}) interface{} {
-	if check {
+func Default(a, b string) string {
+	if a != "" {
 		return a
 	}
 	return b

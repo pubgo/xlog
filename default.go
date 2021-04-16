@@ -31,7 +31,7 @@ func Watch(fn func(logs Xlog)) {
 func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
-	zapL := xerror.ExitErr(xlog_config.NewZapLogger(cfg)).(*zap.Logger)
+	zapL := xerror.ExitErr(cfg.Build()).(*zap.Logger)
 	defaultLog = New(zapL).Named("", zap.WithCaller(true), zap.AddCallerSkip(1))
 }
 

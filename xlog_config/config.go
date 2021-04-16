@@ -51,37 +51,29 @@ func (t Config) handleOpts(opts ...option) Config {
 	return t
 }
 
-func (t Config) toZapLogger() (_ *zap.Logger, err error) {
+func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 	defer xerror.RespErr(&err)
 
 	zapCfg := zap.Config{}
-	xerror.Panic(json.Unmarshal(xerror.PanicBytes(json.Marshal(&t)), &zapCfg))
+	var dt = xerror.PanicBytes(json.Marshal(&t))
+	xerror.Panic(json.Unmarshal(dt, &zapCfg))
 
-	key := t.EncoderConfig.EncodeLevel
-	key = internal.If(key != "", key, defaultKey).(string)
+	key := internal.Default(t.EncoderConfig.EncodeLevel, defaultKey)
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
 
-	key = t.EncoderConfig.EncodeTime
-	key = internal.If(key != "", key, defaultKey).(string)
+	key = internal.Default(t.EncoderConfig.EncodeTime, defaultKey)
 	zapCfg.EncoderConfig.EncodeTime = timeEncoder[key]
 
-	key = t.EncoderConfig.EncodeDuration
-	key = internal.If(key != "", key, defaultKey).(string)
+	key = internal.Default(t.EncoderConfig.EncodeDuration, defaultKey)
 	zapCfg.EncoderConfig.EncodeDuration = durationEncoder[key]
 
-	key = t.EncoderConfig.EncodeCaller
-	key = internal.If(key != "", key, defaultKey).(string)
+	key = internal.Default(t.EncoderConfig.EncodeCaller, defaultKey)
 	zapCfg.EncoderConfig.EncodeCaller = callerEncoder[key]
 
-	key = t.EncoderConfig.EncodeName
-	key = internal.If(key != "", key, defaultKey).(string)
+	key = internal.Default(t.EncoderConfig.EncodeName, defaultKey)
 	zapCfg.EncoderConfig.EncodeName = nameEncoder[key]
 
-	return xerror.PanicErr(zapCfg.Build()).(*zap.Logger), nil
-}
-
-func NewZapLogger(conf Config, opts ...option) (*zap.Logger, error) {
-	return conf.handleOpts(opts...).toZapLogger()
+	return xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger), nil
 }
 
 func NewDevConfig(opts ...option) Config {
