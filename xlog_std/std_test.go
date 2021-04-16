@@ -1,4 +1,4 @@
-package xlog_grpc
+package xlog_std
 
 import (
 	"github.com/pubgo/xlog"
