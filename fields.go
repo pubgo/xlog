@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type Field = zap.Field
+
 func Skip() zap.Field                                          { return zap.Skip() }
 func Bool(key string, val bool) zap.Field                      { return zap.Bool(key, val) }
 func ByteString(key string, val []byte) zap.Field              { return zap.ByteString(key, val) }
