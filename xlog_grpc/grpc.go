@@ -4,14 +4,19 @@ import (
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/xlog_abc"
 	"github.com/pubgo/xlog/xlog_opts"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/grpclog"
 )
+
+var _ grpclog.LoggerV2 = (*loggerWrapper)(nil)
 
 func Init(log xlog.Xlog) {
 	grpclog.SetLoggerV2(&loggerWrapper{log: log.Named("grpc", xlog_opts.AddCallerSkip(4))})
 }
 
-type loggerWrapper struct{ log xlog.Xlog }
+type loggerWrapper struct {
+	log xlog.Xlog
+}
 
 func (l *loggerWrapper) Info(args ...interface{}) {
 	l.log.InfoW(func(log xlog_abc.Logger) { log.Print(args...) })
@@ -62,3 +67,6 @@ func (l *loggerWrapper) Fatalf(format string, args ...interface{}) {
 }
 
 func (l *loggerWrapper) V(_ int) bool { return true }
+func (l *loggerWrapper) Lvl(lvl int) grpclog.LoggerV2 {
+	return &loggerWrapper{log: l.log.Named("", xlog_opts.IncreaseLevel(zapcore.Level(lvl)))}
+}
