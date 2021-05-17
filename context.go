@@ -9,6 +9,10 @@ func WithCtx(ctx context.Context, log Xlog) context.Context {
 		ctx = context.Background()
 	}
 
+	if log == nil {
+		log = getDefault()
+	}
+
 	return context.WithValue(ctx, xlogCtx{}, log)
 }
 

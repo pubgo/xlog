@@ -71,7 +71,6 @@ func SetDefault(lg Xlog) (err error) {
 func With(fields ...zap.Field) Xlog           { return getDefault().With(fields...) }
 func WithFields(fields ...zap.Field) Xlog     { return getDefault().With(fields...) }
 func Named(s string, opts ...zap.Option) Xlog { return getDefault().Named(s, opts...) }
-func Sync() error                             { return xerror.Wrap(getDefault().Sync(), "[xlog] sync error") }
 
 func Debug(fields ...interface{})  { getDefaultNext().Debug(fields...) }
 func Info(fields ...interface{})   { getDefaultNext().Info(fields...) }

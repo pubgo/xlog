@@ -32,7 +32,6 @@ type Xlog interface {
 
 	Named(s string, opts ...zap.Option) Xlog
 	With(fields ...zap.Field) Xlog
-	Sync() error
 }
 
 type Logger interface {
