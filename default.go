@@ -68,9 +68,10 @@ func SetDefault(lg Xlog) (err error) {
 
 // With
 // Deprecated: please use WithFields
-func With(fields ...zap.Field) Xlog           { return getDefault().With(fields...) }
-func WithFields(fields ...zap.Field) Xlog     { return getDefault().With(fields...) }
-func Named(s string, opts ...zap.Option) Xlog { return getDefault().Named(s, opts...) }
+func With(fields ...zap.Field) Xlog               { return getDefault().With(fields...) }
+func WithFields(fields ...zap.Field) Xlog         { return getDefault().With(fields...) }
+func Named(s string, opts ...zap.Option) Xlog     { return getDefault().Named(s, opts...) }
+func GetLogger(s string, opts ...zap.Option) Xlog { return getDefault().Named(s, opts...) }
 
 func Debug(fields ...interface{})  { getDefaultNext().Debug(fields...) }
 func Info(fields ...interface{})   { getDefaultNext().Info(fields...) }
