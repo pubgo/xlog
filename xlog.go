@@ -1,26 +1,24 @@
-package log
+package xlog
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/pubgo/xerror"
-	"github.com/pubgo/xlog/xlog_abc"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-var _ xlog_abc.Xlog = (*xlog)(nil)
-var _ xlog_abc.Logger = (*xlog)(nil)
-
-func New() *xlog { return &xlog{} }
-
 type xlog struct {
-	zl  *zap.Logger
-	lvl zapcore.Level
+	name    string
+	zl      *zap.Logger
+	lvl     zapcore.Level
+	opts    []zap.Option
+	loggers []*xlog
 }
 
-func (t *xlog) PrintM(m xlog_abc.M) {
+func (t *xlog) Zap() *zap.Logger { return t.zl }
+
+func (t *xlog) PrintM(m M) {
 	var fields = make([]zap.Field, 0, len(m))
 	for k, v := range m {
 		fields = append(fields, zap.Any(k, v))
@@ -42,7 +40,7 @@ func (t *xlog) Println(args ...interface{}) {
 	t.zl.Check(t.lvl, msg).Write(fields...)
 }
 
-func (t *xlog) DebugW(f func(log xlog_abc.Logger)) {
+func (t *xlog) DebugW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.DebugLevel) {
 		return
 	}
@@ -50,7 +48,7 @@ func (t *xlog) DebugW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.DebugLevel})
 }
 
-func (t *xlog) InfoW(f func(log xlog_abc.Logger)) {
+func (t *xlog) InfoW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.InfoLevel) {
 		return
 	}
@@ -58,7 +56,7 @@ func (t *xlog) InfoW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.InfoLevel})
 }
 
-func (t *xlog) WarnW(f func(log xlog_abc.Logger)) {
+func (t *xlog) WarnW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.WarnLevel) {
 		return
 	}
@@ -66,7 +64,7 @@ func (t *xlog) WarnW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.WarnLevel})
 }
 
-func (t *xlog) ErrorW(f func(log xlog_abc.Logger)) {
+func (t *xlog) ErrorW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.ErrorLevel) {
 		return
 	}
@@ -74,7 +72,7 @@ func (t *xlog) ErrorW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.ErrorLevel})
 }
 
-func (t *xlog) DPanicW(f func(log xlog_abc.Logger)) {
+func (t *xlog) DPanicW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.DPanicLevel) {
 		return
 	}
@@ -82,7 +80,7 @@ func (t *xlog) DPanicW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.DPanicLevel})
 }
 
-func (t *xlog) PanicW(f func(log xlog_abc.Logger)) {
+func (t *xlog) PanicW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.PanicLevel) {
 		return
 	}
@@ -90,49 +88,12 @@ func (t *xlog) PanicW(f func(log xlog_abc.Logger)) {
 	f(&xlog{zl: t.zl, lvl: zap.PanicLevel})
 }
 
-func (t *xlog) FatalW(f func(log xlog_abc.Logger)) {
+func (t *xlog) FatalW(f func(log Logger)) {
 	if !t.zl.Core().Enabled(zap.FatalLevel) {
 		return
 	}
 
 	f(&xlog{zl: t.zl, lvl: zap.FatalLevel})
-}
-
-func fields(args ...interface{}) (string, []zap.Field) {
-	var msg = ""
-
-	if len(args) == 0 {
-		return msg, nil
-	}
-
-	var fields = make([]zap.Field, 0, len(args))
-	var fields1 = make([]interface{}, 0, len(args))
-	for i := range args {
-		field := args[i]
-		if field == nil {
-			continue
-		}
-
-		if f, ok := field.(zap.Field); ok {
-			fields = append(fields, f)
-			continue
-		}
-
-		if f, ok := field.(xlog_abc.M); ok {
-			for k, v := range f {
-				fields = append(fields, zap.Any(k, v))
-			}
-			continue
-		}
-
-		fields1 = append(fields1, field)
-	}
-
-	if len(fields1) > 0 {
-		msg = fmt.Sprint(fields1...)
-	}
-
-	return msg, fields
 }
 
 func (t *xlog) Debug(args ...interface{}) {
@@ -254,28 +215,58 @@ func (t *xlog) Fatalf(format string, a ...interface{}) {
 	t.zl.Fatal(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) With(fields ...zap.Field) xlog_abc.Xlog { return &xlog{zl: t.zl.With(fields...)} }
-func (t *xlog) Sync() error                            { return xerror.Wrap(t.zl.Sync()) }
-
-func (t *xlog) SetZapLogger(zl *zap.Logger) *xlog {
-	if zl == nil {
-		t.zl.Warn("[zl] is nil")
-		return t
+func (t *xlog) initLogger() {
+	for i := range t.loggers {
+		var xl = t.loggers[i]
+		xl.zl = t.zl.Named(xl.name).WithOptions(xl.opts...)
+		xl.initLogger()
 	}
-
-	t.zl = zl
-	return t
 }
 
-func (t *xlog) Named(s string, opts ...zap.Option) xlog_abc.Xlog {
-	zl := t.zl
-	if len(opts) > 0 {
-		zl = zl.WithOptions(opts...)
+func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
+	var xl = &xlog{
+		zl:   t.zl.Named(name).WithOptions(opts...),
+		opts: opts,
+		name: strings.Join([]string{t.name, name}, "."),
 	}
 
-	if strings.TrimSpace(s) != "" {
-		zl = zl.Named(s)
+	t.loggers = append(t.loggers, xl)
+	return xl
+}
+
+func fields(args ...interface{}) (string, []zap.Field) {
+	var msg = ""
+
+	if len(args) == 0 {
+		return msg, nil
 	}
 
-	return &xlog{zl: zl}
+	var fields = make([]zap.Field, 0, len(args))
+	var fields1 = make([]interface{}, 0, len(args))
+	for i := range args {
+		field := args[i]
+		if field == nil {
+			continue
+		}
+
+		if f, ok := field.(zap.Field); ok {
+			fields = append(fields, f)
+			continue
+		}
+
+		if f, ok := field.(M); ok {
+			for k, v := range f {
+				fields = append(fields, zap.Any(k, v))
+			}
+			continue
+		}
+
+		fields1 = append(fields1, field)
+	}
+
+	if len(fields1) > 0 {
+		msg = fmt.Sprint(fields1...)
+	}
+
+	return msg, fields
 }

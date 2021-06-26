@@ -1,4 +1,4 @@
-package xlog_abc
+package xlog
 
 import (
 	"go.uber.org/zap"
@@ -30,8 +30,8 @@ type Xlog interface {
 	Fatalf(format string, a ...interface{})
 	DPanicf(format string, a ...interface{})
 
-	Named(s string, opts ...zap.Option) Xlog
-	With(fields ...zap.Field) Xlog
+	Named(name string, opts ...zap.Option) Xlog
+	Zap() *zap.Logger
 }
 
 type Logger interface {

@@ -6,39 +6,34 @@ import (
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/xlog_config"
+	"go.uber.org/zap"
 )
 
-var log xlog.Xlog
-
-func init() {
-	xlog.Watch(func(logs xlog.Xlog) {
-		log = logs.Named("test")
-	})
-}
+var log = xlog.GetLogger("test", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
-	log.Info("hello", xlog.String("ss", "hello1"))
-	xlog.Info("hello", xlog.String("ss", "hello1"))
-	xlog.Infof("hello %s", "1234")
-	xlog.InfoM("hello %s", xlog.M{
+	log.Info("hello", zap.String("ss", "hello1"))
+	log.Info("hello", zap.String("ss", "hello1"))
+	log.Infof("hello %s", "1234")
+	log.Info("hello %s", xlog.M{
 		"test": "ok",
 	})
-	xlog.Warn("test")
+	log.Warn("test")
 
 	initCfgFromJson()
 
-	xlog.Info("hello", xlog.String("ss", "hello1"))
-	xlog.Infof("hello %s", "1234")
-	xlog.InfoM("hello %s", xlog.M{
+	log.Info("hello", zap.String("ss", "hello1"))
+	log.Infof("hello %s", "1234")
+	log.Info("hello %s", xlog.M{
 		"test": "ok",
 	})
-	xlog.Warn("test")
-	log.Info("hello", xlog.String("ss", "hello1"))
-	xlog.WarnW(func(log xlog.Logger) {
-		log.Println("hello w")
+	log.Warn("test")
+	log.Info("hello", zap.String("ss", "hello1"))
+	log.WarnW(func(logs xlog.Logger) {
+		logs.Println("hello w")
 	})
-	log.WarnW(func(log xlog.Logger) {
-		log.Print("hhhh jnjnjnj")
+	log.WarnW(func(logs xlog.Logger) {
+		logs.Print("hhhh jnjnjnj")
 	})
 }
 
@@ -78,6 +73,6 @@ func initCfgFromJson() {
 	zl, err := cfg1.Build()
 
 	xerror.Exit(err)
-	xerror.Exit(xlog.SetDefault(xlog.New(zl)))
-	xlog.Warn("test")
+	xerror.Exit(xlog.SetDefault(zl))
+	log.Warn("test")
 }

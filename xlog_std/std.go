@@ -2,14 +2,14 @@ package xlog_std
 
 import (
 	"github.com/pubgo/xlog"
-	"github.com/pubgo/xlog/xlog_opts"
+	"go.uber.org/zap"
 
 	"io"
 	"log"
 )
 
-func New(name string, opts ...xlog_opts.Option) *log.Logger {
-	return log.New(&w{l: xlog.Named(name, append(opts, xlog_opts.AddCallerSkip(3))...)}, "", log.LstdFlags|log.Llongfile)
+func New(name string, opts ...zap.Option) *log.Logger {
+	return log.New(&w{l: xlog.GetLogger(name, append(opts, zap.AddCallerSkip(3))...)}, "", log.LstdFlags|log.Llongfile)
 }
 
 var _ io.Writer = (*w)(nil)

@@ -2,16 +2,16 @@ package xlog_grpc
 
 import (
 	"github.com/pubgo/xlog"
-	"github.com/pubgo/xlog/xlog_abc"
-	"github.com/pubgo/xlog/xlog_opts"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/grpclog"
 )
 
 var _ grpclog.LoggerV2 = (*loggerWrapper)(nil)
+var log = xlog.GetLogger("grpc", zap.AddCallerSkip(4))
 
-func Init(log xlog.Xlog) {
-	grpclog.SetLoggerV2(&loggerWrapper{log: log.Named("grpc", xlog_opts.AddCallerSkip(4))})
+func init() {
+	grpclog.SetLoggerV2(&loggerWrapper{log: log})
 }
 
 type loggerWrapper struct {
@@ -48,7 +48,7 @@ func (l *loggerWrapper) Info(args ...interface{}) {
 		return
 	}
 
-	l.log.InfoW(func(log xlog_abc.Logger) { log.Print(args...) })
+	l.log.InfoW(func(log xlog.Logger) { log.Print(args...) })
 }
 
 func (l *loggerWrapper) Infoln(args ...interface{}) {
@@ -56,7 +56,7 @@ func (l *loggerWrapper) Infoln(args ...interface{}) {
 		return
 	}
 
-	l.log.InfoW(func(log xlog_abc.Logger) { log.Println(args...) })
+	l.log.InfoW(func(log xlog.Logger) { log.Println(args...) })
 }
 
 func (l *loggerWrapper) Infof(format string, args ...interface{}) {
@@ -64,7 +64,7 @@ func (l *loggerWrapper) Infof(format string, args ...interface{}) {
 		return
 	}
 
-	l.log.InfoW(func(log xlog_abc.Logger) { log.Printf(format, args...) })
+	l.log.InfoW(func(log xlog.Logger) { log.Printf(format, args...) })
 }
 
 func (l *loggerWrapper) Warning(args ...interface{}) {
@@ -72,7 +72,7 @@ func (l *loggerWrapper) Warning(args ...interface{}) {
 		return
 	}
 
-	l.log.WarnW(func(log xlog_abc.Logger) { log.Print(args...) })
+	l.log.WarnW(func(log xlog.Logger) { log.Print(args...) })
 }
 
 func (l *loggerWrapper) Warningln(args ...interface{}) {
@@ -80,7 +80,7 @@ func (l *loggerWrapper) Warningln(args ...interface{}) {
 		return
 	}
 
-	l.log.WarnW(func(log xlog_abc.Logger) { log.Println(args...) })
+	l.log.WarnW(func(log xlog.Logger) { log.Println(args...) })
 }
 
 func (l *loggerWrapper) Warningf(format string, args ...interface{}) {
@@ -88,7 +88,7 @@ func (l *loggerWrapper) Warningf(format string, args ...interface{}) {
 		return
 	}
 
-	l.log.WarnW(func(log xlog_abc.Logger) { log.Printf(format, args...) })
+	l.log.WarnW(func(log xlog.Logger) { log.Printf(format, args...) })
 }
 
 func (l *loggerWrapper) Error(args ...interface{}) {
@@ -96,7 +96,7 @@ func (l *loggerWrapper) Error(args ...interface{}) {
 		return
 	}
 
-	l.log.ErrorW(func(log xlog_abc.Logger) { log.Print(args...) })
+	l.log.ErrorW(func(log xlog.Logger) { log.Print(args...) })
 }
 
 func (l *loggerWrapper) Errorln(args ...interface{}) {
@@ -104,7 +104,7 @@ func (l *loggerWrapper) Errorln(args ...interface{}) {
 		return
 	}
 
-	l.log.ErrorW(func(log xlog_abc.Logger) { log.Println(args...) })
+	l.log.ErrorW(func(log xlog.Logger) { log.Println(args...) })
 }
 
 func (l *loggerWrapper) Errorf(format string, args ...interface{}) {
@@ -112,7 +112,7 @@ func (l *loggerWrapper) Errorf(format string, args ...interface{}) {
 		return
 	}
 
-	l.log.ErrorW(func(log xlog_abc.Logger) { log.Printf(format, args...) })
+	l.log.ErrorW(func(log xlog.Logger) { log.Printf(format, args...) })
 }
 
 func (l *loggerWrapper) Fatal(args ...interface{}) {
@@ -120,7 +120,7 @@ func (l *loggerWrapper) Fatal(args ...interface{}) {
 		return
 	}
 
-	l.log.FatalW(func(log xlog_abc.Logger) { log.Print(args...) })
+	l.log.FatalW(func(log xlog.Logger) { log.Print(args...) })
 }
 
 func (l *loggerWrapper) Fatalln(args ...interface{}) {
@@ -128,7 +128,7 @@ func (l *loggerWrapper) Fatalln(args ...interface{}) {
 		return
 	}
 
-	l.log.FatalW(func(log xlog_abc.Logger) { log.Println(args...) })
+	l.log.FatalW(func(log xlog.Logger) { log.Println(args...) })
 }
 
 func (l *loggerWrapper) Fatalf(format string, args ...interface{}) {
@@ -136,10 +136,10 @@ func (l *loggerWrapper) Fatalf(format string, args ...interface{}) {
 		return
 	}
 
-	l.log.FatalW(func(log xlog_abc.Logger) { log.Printf(format, args...) })
+	l.log.FatalW(func(log xlog.Logger) { log.Printf(format, args...) })
 }
 
 func (l *loggerWrapper) V(_ int) bool { return true }
 func (l *loggerWrapper) Lvl(lvl int) grpclog.LoggerV2 {
-	return &loggerWrapper{log: l.log.Named("", xlog_opts.IncreaseLevel(zapcore.Level(lvl)))}
+	return &loggerWrapper{log: l.log.Named("", zap.IncreaseLevel(zapcore.Level(lvl)))}
 }
