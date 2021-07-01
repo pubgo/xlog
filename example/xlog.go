@@ -12,16 +12,27 @@ import (
 var log = xlog.GetLogger("test", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
+	xlog.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Infof("hello %s", "1234")
 	log.Info("hello %s", xlog.M{
 		"test": "ok",
 	})
+	xlog.Info("hello %s", xlog.M{
+		"test": "ok",
+	})
 	log.Warn("test")
+	log.InfoW(func(log xlog.Logger) {
+		log.Print("ok")
+	})
+	xlog.InfoW(func(log xlog.Logger) {
+		log.Print("ok")
+	})
 
 	initCfgFromJson()
 
+	xlog.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Infof("hello %s", "1234")
 	log.Info("hello %s", xlog.M{
@@ -34,6 +45,9 @@ func main() {
 	})
 	log.WarnW(func(logs xlog.Logger) {
 		logs.Print("hhhh jnjnjnj")
+	})
+	xlog.InfoW(func(log xlog.Logger) {
+		log.Print("ok")
 	})
 }
 
