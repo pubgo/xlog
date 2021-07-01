@@ -30,6 +30,9 @@ func GetLogger(name string, opts ...zap.Option) Xlog {
 	return xl
 }
 
+// GetDefault 获取默认xlog
+func GetDefault() Xlog { return defaultLog }
+
 // SetDefault 设置默认的zap logger
 func SetDefault(logger *zap.Logger) (err error) {
 	xerror.RespErr(&err)
