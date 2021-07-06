@@ -63,7 +63,11 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
 
 	key = internal.Default(t.EncoderConfig.EncodeTime, defaultKey)
-	zapCfg.EncoderConfig.EncodeTime = timeEncoder[key]
+	zapCfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(key)
+	var te, ok = timeEncoder[key]
+	if ok {
+		zapCfg.EncoderConfig.EncodeTime = te
+	}
 
 	key = internal.Default(t.EncoderConfig.EncodeDuration, defaultKey)
 	zapCfg.EncoderConfig.EncodeDuration = durationEncoder[key]
