@@ -1,6 +1,8 @@
 package xlog_grpc
 
 import (
+	"fmt"
+
 	"github.com/pubgo/xlog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -8,17 +10,37 @@ import (
 )
 
 var _ grpclog.LoggerV2 = (*loggerWrapper)(nil)
-var log = xlog.GetLogger("grpc", zap.AddCallerSkip(4))
+var _ grpclog.DepthLoggerV2 = (*loggerWrapper)(nil)
 
 func init() {
-	grpclog.SetLoggerV2(&loggerWrapper{log: log})
+	grpclog.SetLoggerV2(&loggerWrapper{
+		log:      xlog.GetLogger("grpc", zap.AddCallerSkip(4)),
+		depthLog: xlog.GetLogger("grpc-component", zap.AddCallerSkip(1))},
+	)
 }
 
 type loggerWrapper struct {
 	log           xlog.Xlog
+	depthLog      xlog.Xlog
 	printFilter   func(args ...interface{}) bool
 	printfFilter  func(format string, args ...interface{}) bool
 	printlnFilter func(args ...interface{}) bool
+}
+
+func (l *loggerWrapper) InfoDepth(depth int, args ...interface{}) {
+	l.depthLog.Zap().WithOptions(zap.AddCallerSkip(depth)).Info(fmt.Sprint(args...))
+}
+
+func (l *loggerWrapper) WarningDepth(depth int, args ...interface{}) {
+	l.depthLog.Zap().WithOptions(zap.AddCallerSkip(depth)).Warn(fmt.Sprint(args...))
+}
+
+func (l *loggerWrapper) ErrorDepth(depth int, args ...interface{}) {
+	l.depthLog.Zap().WithOptions(zap.AddCallerSkip(depth)).Error(fmt.Sprint(args...))
+}
+
+func (l *loggerWrapper) FatalDepth(depth int, args ...interface{}) {
+	l.depthLog.Zap().WithOptions(zap.AddCallerSkip(depth)).Fatal(fmt.Sprint(args...))
 }
 
 func (l *loggerWrapper) SetPrintFilter(filter func(args ...interface{}) bool) {

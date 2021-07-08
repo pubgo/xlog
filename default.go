@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var loggerList []*xlog
+var loggerMap = map[string]*xlog{}
 
 var defaultZap *zap.Logger
 var defaultLog Xlog
@@ -24,9 +24,12 @@ func init() {
 func GetLogger(name string, opts ...zap.Option) Xlog {
 	xerror.Assert(name == "", "[name] is null")
 
-	var zl = defaultZap.Named(name).WithOptions(opts...)
-	var xl = &xlog{opts: opts, name: name, zl: zl}
-	loggerList = append(loggerList, xl)
+	if xl, ok := loggerMap[name]; ok {
+		return xl
+	}
+
+	var xl = &xlog{opts: opts, name: name, zl: defaultZap.Named(name).WithOptions(opts...)}
+	loggerMap[name] = xl
 	return xl
 }
 
@@ -43,10 +46,8 @@ func SetDefault(logger *zap.Logger) (err error) {
 	defaultWLog = defaultLog.Named("", zap.AddCallerSkip(-1))
 
 	// 初始化log依赖
-	for i := range loggerList {
-		var xl = loggerList[i]
+	for _, xl := range loggerMap {
 		xl.zl = defaultZap.Named(xl.name).WithOptions(xl.opts...)
-		xl.initLogger()
 	}
 
 	return

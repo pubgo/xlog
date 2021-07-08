@@ -9,11 +9,10 @@ import (
 )
 
 type xlog struct {
-	name    string
-	zl      *zap.Logger
-	lvl     zapcore.Level
-	opts    []zap.Option
-	loggers []*xlog
+	name string
+	zl   *zap.Logger
+	lvl  zapcore.Level
+	opts []zap.Option
 }
 
 func (t *xlog) Zap() *zap.Logger { return t.zl }
@@ -215,22 +214,17 @@ func (t *xlog) Fatalf(format string, a ...interface{}) {
 	t.zl.Fatal(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) initLogger() {
-	for i := range t.loggers {
-		var xl = t.loggers[i]
-		xl.zl = t.zl.Named(xl.name).WithOptions(xl.opts...)
-		xl.initLogger()
-	}
-}
-
 func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
 	var xl = &xlog{
-		zl:   t.zl.Named(name).WithOptions(opts...),
 		opts: opts,
+		zl:   t.zl.Named(name).WithOptions(opts...),
 		name: strings.Join([]string{t.name, name}, "."),
 	}
 
-	t.loggers = append(t.loggers, xl)
+	if name != "" {
+		loggerMap[xl.name] = xl
+	}
+
 	return xl
 }
 
