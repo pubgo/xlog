@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	stdLog "log"
 
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
@@ -12,6 +13,8 @@ import (
 var log = xlog.GetLogger("test", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
+	stdLog.Println("hello std")
+	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
@@ -32,6 +35,8 @@ func main() {
 
 	initCfgFromJson()
 
+	stdLog.Println("hello std")
+	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Infof("hello %s", "1234")

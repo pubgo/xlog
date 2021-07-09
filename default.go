@@ -4,6 +4,8 @@ import (
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/xlog_config"
 	"go.uber.org/zap"
+
+	"log"
 )
 
 var loggerMap = map[string]*xlog{}
@@ -16,6 +18,13 @@ func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
 	defaultZap = xerror.ExitErr(cfg.Build()).(*zap.Logger)
+
+	// 替换zap默认log
+	zap.ReplaceGlobals(defaultZap)
+	// 替换std默认log
+	var stdLog = log.Default()
+	*stdLog = *zap.NewStdLog(defaultZap)
+
 	defaultZap = defaultZap.WithOptions(zap.AddCaller(), zap.AddCallerSkip(1))
 	defaultLog = &xlog{zl: defaultZap.WithOptions(zap.AddCallerSkip(1))}
 	defaultWLog = defaultLog.Named("", zap.AddCallerSkip(-1))
@@ -33,6 +42,20 @@ func GetLogger(name string, opts ...zap.Option) Xlog {
 	return xl
 }
 
+func InitLogger(name string, opts ...zap.Option) (gErr error) {
+	defer xerror.RespErr(&gErr)
+
+	xerror.Assert(name == "", "[name] is null")
+
+	loggerMap[name] = &xlog{
+		opts: opts,
+		name: name,
+		zl:   defaultZap.Named(name).WithOptions(opts...),
+	}
+
+	return nil
+}
+
 // GetDefault 获取默认xlog
 func GetDefault() Xlog { return defaultLog }
 
@@ -41,6 +64,14 @@ func SetDefault(logger *zap.Logger) (err error) {
 	xerror.RespErr(&err)
 
 	xerror.Assert(logger == nil, "[logger] should not be nil")
+	defaultZap = logger.WithOptions(zap.AddCaller())
+
+	// 替换zap默认log
+	zap.ReplaceGlobals(defaultZap)
+	// 替换std默认log
+	var stdLog = log.Default()
+	*stdLog = *zap.NewStdLog(defaultZap)
+
 	defaultZap = logger.WithOptions(zap.AddCaller(), zap.AddCallerSkip(1))
 	defaultLog = &xlog{zl: defaultZap.WithOptions(zap.AddCallerSkip(1))}
 	defaultWLog = defaultLog.Named("", zap.AddCallerSkip(-1))
