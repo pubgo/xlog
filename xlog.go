@@ -2,8 +2,6 @@ package xlog
 
 import (
 	"fmt"
-	"strings"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -216,10 +214,18 @@ func (t *xlog) Fatalf(format string, a ...interface{}) {
 
 func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
 	var xl = &xlog{
+		name: name,
 		opts: opts,
 		zl:   t.zl.Named(name).WithOptions(opts...),
-		name: strings.Join([]string{t.name, name}, "."),
 	}
+
+	//if name != "" {
+	//	if xl.name != "" {
+	//		xl.name = strings.Join([]string{t.name, name}, ".")
+	//	} else {
+	//		xl.name = name
+	//	}
+	//}
 
 	if name != "" {
 		loggerMap[xl.name] = xl

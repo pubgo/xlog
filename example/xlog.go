@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	stdLog "log"
 
 	"github.com/pubgo/xerror"
@@ -10,48 +11,53 @@ import (
 	"go.uber.org/zap"
 )
 
-var log = xlog.GetLogger("test", zap.Fields(zap.String("name", "test_hello")))
+var log = xlog.GetLogger("test.12345", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
 	stdLog.Println("hello std")
 	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
+	xlog.Error("hello", zap.String("ss", "hello1"))
+	xlog.Info("hello %s", xlog.M{
+		"test": "ok",
+	})
+	xlog.InfoW(func(log xlog.Logger) {
+		log.Print("ok")
+	})
 	log.Info("hello", zap.String("ss", "hello1"))
+	log.Error("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Infof("hello %s", "1234")
 	log.Info("hello %s", xlog.M{
-		"test": "ok",
-	})
-	xlog.Info("hello %s", xlog.M{
 		"test": "ok",
 	})
 	log.Warn("test")
 	log.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
-	xlog.InfoW(func(log xlog.Logger) {
-		log.Print("ok")
-	})
 
 	initCfgFromJson()
 
+	fmt.Printf("ok-----------------------------------------\n\n")
 	stdLog.Println("hello std")
 	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
+	xlog.Error("hello", zap.String("ss", "hello1"))
+	xlog.Info("hello %s", xlog.M{
+		"test": "ok",
+	})
+	xlog.InfoW(func(log xlog.Logger) {
+		log.Print("ok")
+	})
+	log.Info("hello", zap.String("ss", "hello1"))
+	log.Error("hello", zap.String("ss", "hello1"))
 	log.Info("hello", zap.String("ss", "hello1"))
 	log.Infof("hello %s", "1234")
 	log.Info("hello %s", xlog.M{
 		"test": "ok",
 	})
 	log.Warn("test")
-	log.Info("hello", zap.String("ss", "hello1"))
-	log.WarnW(func(logs xlog.Logger) {
-		logs.Println("hello w")
-	})
-	log.WarnW(func(logs xlog.Logger) {
-		logs.Print("hhhh jnjnjnj")
-	})
-	xlog.InfoW(func(log xlog.Logger) {
+	log.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
 }
@@ -66,7 +72,7 @@ func initCfgFromJson() {
                 "initial": 100,
                 "thereafter": 100
         },
-        "encoding": "json",
+        "encoding": "console",
         "encoderConfig": {
                 "messageKey": "msg",
                 "levelKey": "level",
@@ -83,12 +89,14 @@ func initCfgFromJson() {
         },
         "outputPaths": ["stderr"],
         "errorOutputPaths": ["stderr"],
-        "initialFields": null
+        "initialFields": {"hello":"world"},
+		"filterSuffix":["test.12345"]
 }`
 
 	var cfg1 xlog_config.Config
 	xerror.Exit(json.Unmarshal([]byte(cfg), &cfg1))
 	cfg1.Encoding = "console"
+	//cfg1.Encoding = "json"
 	zl, err := cfg1.Build()
 
 	xerror.Exit(err)

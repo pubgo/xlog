@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pubgo/xerror"
@@ -63,14 +64,20 @@ var (
 )
 
 func init() {
-	// RegisterEncoder
 	for k, v := range encoderNameToConstructor {
-		_ = zap.RegisterEncoder(k, v)
+		if err := zap.RegisterEncoder(k, v); err != nil {
+			if !strings.Contains(err.Error(), "already registered") {
+				xerror.Panic(err)
+			}
+		}
 	}
 
-	// RegisterSink
 	for k, v := range sinkFactories {
-		_ = zap.RegisterSink(k, v)
+		if err := zap.RegisterSink(k, v); err != nil {
+			if !strings.Contains(err.Error(), "already registered") {
+				xerror.Panic(err)
+			}
+		}
 	}
 }
 
@@ -164,23 +171,18 @@ func newRotateSink(u *url.URL) (zap.Sink, error) {
 	return &nopCloserSink{zapcore.AddSync(w)}, err
 }
 
-func newFileSink(u *url.URL) (zap.Sink, error) {
-	if u.User != nil {
-		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
-	}
-	if u.Fragment != "" {
-		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
-	}
-	if u.RawQuery != "" {
-		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
-	}
+func newFileSink(u *url.URL) (_ zap.Sink, err error) {
+	defer xerror.RespErr(&err)
+
+	xerror.Assert(u.User != nil, "user and password not allowed with file URLs: got %v", u)
+	xerror.Assert(u.Fragment != "", "fragments not allowed with file URLs: got %v", u)
+	xerror.Assert(u.RawQuery != "", "query parameters not allowed with file URLs: got %v", u)
+
 	// Error messages are better if we check hostname and port separately.
-	if u.Port() != "" {
-		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
-	}
-	if hn := u.Hostname(); hn != "" && hn != "localhost" {
-		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
-	}
+	xerror.Assert(u.Port() != "", "ports not allowed with file URLs: got %v", u)
+
+	hn := u.Hostname()
+	xerror.Assert(hn != "" && hn != "localhost", "file URLs must leave host empty or use localhost: got %v", u)
 
 	switch u.Path {
 	case "stdout":
@@ -188,6 +190,8 @@ func newFileSink(u *url.URL) (zap.Sink, error) {
 	case "stderr":
 		return nopCloserSink{os.Stderr}, nil
 	}
+
+	u.Path = os.ExpandEnv(u.Path)
 	return os.OpenFile(u.Path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 }
 
@@ -207,3 +211,50 @@ func _RFC3339MilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 type nopCloserSink struct{ zapcore.WriteSyncer }
 
 func (t nopCloserSink) Close() error { return nil }
+
+var _ zapcore.Core = (*filterCore)(nil)
+
+type filterCore struct {
+	filterPrefix []string
+	filterSuffix []string
+	zapcore.Core
+}
+
+func (t *filterCore) With(fields []zapcore.Field) zapcore.Core {
+	return &filterCore{
+		Core:         t.Core.With(fields),
+		filterPrefix: t.filterPrefix,
+		filterSuffix: t.filterSuffix,
+	}
+}
+
+func (t *filterCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
+	for i := range t.filterPrefix {
+		if strings.HasPrefix(ent.LoggerName, t.filterPrefix[i]) {
+			return nil
+		}
+	}
+
+	for i := range t.filterSuffix {
+		if strings.HasSuffix(ent.LoggerName, t.filterSuffix[i]) {
+			return nil
+		}
+	}
+
+	return t.Core.Write(ent, fields)
+}
+
+func (t *filterCore) Check(ent zapcore.Entry, cc *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	for i := range t.filterPrefix {
+		if strings.HasPrefix(ent.LoggerName, t.filterPrefix[i]) {
+			return cc.AddCore(ent, t)
+		}
+	}
+
+	for i := range t.filterSuffix {
+		if strings.HasSuffix(ent.LoggerName, t.filterSuffix[i]) {
+			return cc.AddCore(ent, t)
+		}
+	}
+	return t.Core.Check(ent, cc)
+}

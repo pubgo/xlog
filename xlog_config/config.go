@@ -13,18 +13,19 @@ import (
 type option func(opts *Config)
 
 type encoderConfig struct {
-	MessageKey     string `json:"messageKey" yaml:"messageKey" toml:"messageKey"`
-	LevelKey       string `json:"levelKey" yaml:"levelKey" toml:"levelKey"`
-	TimeKey        string `json:"timeKey" yaml:"timeKey" toml:"timeKey"`
-	NameKey        string `json:"nameKey" yaml:"nameKey" toml:"nameKey"`
-	CallerKey      string `json:"callerKey" yaml:"callerKey" toml:"callerKey"`
-	StacktraceKey  string `json:"stacktraceKey" yaml:"stacktraceKey" toml:"stacktraceKey"`
-	LineEnding     string `json:"lineEnding" yaml:"lineEnding" toml:"lineEnding"`
-	EncodeLevel    string `json:"levelEncoder" yaml:"levelEncoder" toml:"levelEncoder"`
-	EncodeTime     string `json:"timeEncoder" yaml:"timeEncoder" toml:"timeEncoder"`
-	EncodeDuration string `json:"durationEncoder" yaml:"durationEncoder" toml:"durationEncoder"`
-	EncodeCaller   string `json:"callerEncoder" yaml:"callerEncoder" toml:"callerEncoder"`
-	EncodeName     string `json:"nameEncoder" yaml:"nameEncoder" toml:"nameEncoder"`
+	MessageKey       string `json:"messageKey" yaml:"messageKey" toml:"messageKey"`
+	LevelKey         string `json:"levelKey" yaml:"levelKey" toml:"levelKey"`
+	TimeKey          string `json:"timeKey" yaml:"timeKey" toml:"timeKey"`
+	NameKey          string `json:"nameKey" yaml:"nameKey" toml:"nameKey"`
+	CallerKey        string `json:"callerKey" yaml:"callerKey" toml:"callerKey"`
+	StacktraceKey    string `json:"stacktraceKey" yaml:"stacktraceKey" toml:"stacktraceKey"`
+	LineEnding       string `json:"lineEnding" yaml:"lineEnding" toml:"lineEnding"`
+	EncodeLevel      string `json:"levelEncoder" yaml:"levelEncoder" toml:"levelEncoder"`
+	EncodeTime       string `json:"timeEncoder" yaml:"timeEncoder" toml:"timeEncoder"`
+	EncodeDuration   string `json:"durationEncoder" yaml:"durationEncoder" toml:"durationEncoder"`
+	EncodeCaller     string `json:"callerEncoder" yaml:"callerEncoder" toml:"callerEncoder"`
+	EncodeName       string `json:"nameEncoder" yaml:"nameEncoder" toml:"nameEncoder"`
+	ConsoleSeparator string `json:"consoleSeparator" yaml:"consoleSeparator"`
 }
 
 type samplingConfig struct {
@@ -43,6 +44,8 @@ type Config struct {
 	OutputPaths       []string               `json:"outputPaths" yaml:"outputPaths" toml:"outputPaths"`
 	ErrorOutputPaths  []string               `json:"errorOutputPaths" yaml:"errorOutputPaths" toml:"errorOutputPaths"`
 	InitialFields     map[string]interface{} `json:"initialFields" yaml:"initialFields" toml:"initialFields"`
+	FilterPrefix      []string               `json:"filterPrefix" yaml:"filterPrefix" toml:"filterPrefix"`
+	FilterSuffix      []string               `json:"filterSuffix" yaml:"filterSuffix" toml:"filterSuffix"`
 }
 
 func (t Config) handleOpts(opts ...option) Config {
@@ -78,7 +81,16 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 	key = internal.Default(t.EncoderConfig.EncodeName, defaultKey)
 	zapCfg.EncoderConfig.EncodeName = nameEncoder[key]
 
-	return xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger), nil
+	var log = xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger)
+	log = log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+		return &filterCore{
+			Core:         core,
+			filterPrefix: t.FilterPrefix,
+			filterSuffix: t.FilterSuffix,
+		}
+	}))
+
+	return log, nil
 }
 
 func NewDevConfig(opts ...option) Config {

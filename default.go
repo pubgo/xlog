@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-var loggerMap = map[string]*xlog{}
+var loggerMap = make(map[string]Xlog)
 
 var defaultZap *zap.Logger
 var defaultLog Xlog
@@ -18,16 +18,7 @@ func init() {
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
 	defaultZap = xerror.ExitErr(cfg.Build()).(*zap.Logger)
-
-	// 替换zap默认log
-	zap.ReplaceGlobals(defaultZap)
-	// 替换std默认log
-	var stdLog = log.Default()
-	*stdLog = *zap.NewStdLog(defaultZap)
-
-	defaultZap = defaultZap.WithOptions(zap.AddCaller(), zap.AddCallerSkip(1))
-	defaultLog = &xlog{zl: defaultZap.WithOptions(zap.AddCallerSkip(1))}
-	defaultWLog = defaultLog.Named("", zap.AddCallerSkip(-1))
+	xerror.Exit(SetDefault(defaultZap))
 }
 
 func GetLogger(name string, opts ...zap.Option) Xlog {
@@ -37,23 +28,9 @@ func GetLogger(name string, opts ...zap.Option) Xlog {
 		return xl
 	}
 
-	var xl = &xlog{opts: opts, name: name, zl: defaultZap.Named(name).WithOptions(opts...)}
+	var xl = &xlog{opts: opts, zl: defaultZap.Named(name).WithOptions(opts...)}
 	loggerMap[name] = xl
 	return xl
-}
-
-func InitLogger(name string, opts ...zap.Option) (gErr error) {
-	defer xerror.RespErr(&gErr)
-
-	xerror.Assert(name == "", "[name] is null")
-
-	loggerMap[name] = &xlog{
-		opts: opts,
-		name: name,
-		zl:   defaultZap.Named(name).WithOptions(opts...),
-	}
-
-	return nil
 }
 
 // GetDefault 获取默认xlog
@@ -77,8 +54,8 @@ func SetDefault(logger *zap.Logger) (err error) {
 	defaultWLog = defaultLog.Named("", zap.AddCallerSkip(-1))
 
 	// 初始化log依赖
-	for _, xl := range loggerMap {
-		xl.zl = defaultZap.Named(xl.name).WithOptions(xl.opts...)
+	for name, xl := range loggerMap {
+		xl.(*xlog).zl = defaultZap.Named(name).WithOptions(xl.(*xlog).opts...)
 	}
 
 	return
