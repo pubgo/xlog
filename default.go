@@ -10,8 +10,8 @@ import (
 )
 
 var loggerMap sync.Map
-var defaultLog Xlog
-var defaultWLog Xlog
+var defaultLog *xlog
+var defaultWLog *xlog
 
 func init() {
 	cfg := xlog_config.NewDevConfig()
@@ -27,10 +27,13 @@ func GetLogger(name string, opts ...zap.Option) Xlog {
 		return xl.(*xlog)
 	}
 
-	var xl = &xlog{opts: opts, zl: zap.L().
-		Named(name).
-		WithOptions(zap.AddCallerSkip(1)).
-		WithOptions(opts...)}
+	var xl = &xlog{
+		opts: opts,
+		zl: zap.L().
+			Named(name).
+			WithOptions(zap.AddCallerSkip(1)).
+			WithOptions(opts...),
+	}
 	loggerMap.Store(name, xl)
 	return xl
 }

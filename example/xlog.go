@@ -65,6 +65,7 @@ func main() {
 	log.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
+	log.Named("kkkkkk").Info("hello")
 }
 
 func initCfgFromJson() {

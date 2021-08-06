@@ -14,6 +14,12 @@ type xlog struct {
 	opts []zap.Option
 }
 
+func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
+	var xl = &xlog{opts: opts, zl: t.zl.Named(name).WithOptions(opts...)}
+	loggerMap.Store(name, xl)
+	return xl
+}
+
 func (t *xlog) PrintM(m M) {
 	var fields = make([]zap.Field, 0, len(m))
 	for k, v := range m {
