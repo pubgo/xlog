@@ -21,7 +21,7 @@ func main() {
 	xlog.Info(fmt.Sprintf)
 	xlog.Info(fmt.Sprintf, zap.Logger{})
 	xlog.Info(fmt.Sprintf, xerror.Wrap(xerror.Fmt("hello")))
-	xlog.Info("hello", xlog.WithCtx(context.Background(), zap.String("kkk", "sss")))
+	xlog.Info("hello", xlog.AppendCtx(context.Background(), zap.String("kkk", "sss")))
 	xlog.Error("hello", zap.String("ss", "hello1"))
 	xlog.Info("hello %s", xlog.M{
 		"test": "ok",

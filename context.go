@@ -8,6 +8,7 @@ import (
 
 type ctxKey struct{}
 
-func WithCtx(ctx context.Context, fields ...zap.Field) context.Context {
-	return context.WithValue(ctx, ctxKey{}, fields)
+func AppendCtx(ctx context.Context, fields ...zap.Field) context.Context {
+	var fieldList, _ = ctx.Value(ctxKey{}).([]zap.Field)
+	return context.WithValue(ctx, ctxKey{}, append(fieldList, fields...))
 }
