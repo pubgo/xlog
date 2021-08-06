@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	stdLog "log"
@@ -17,6 +18,10 @@ func main() {
 	stdLog.Println("hello std")
 	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
+	xlog.Info(fmt.Sprintf)
+	xlog.Info(fmt.Sprintf, zap.Logger{})
+	xlog.Info(fmt.Sprintf, xerror.Wrap(xerror.Fmt("hello")))
+	xlog.Info("hello", xlog.WithCtx(context.Background(), zap.String("kkk", "sss")))
 	xlog.Error("hello", zap.String("ss", "hello1"))
 	xlog.Info("hello %s", xlog.M{
 		"test": "ok",
@@ -49,14 +54,14 @@ func main() {
 	xlog.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
-	log.Info("hello", zap.String("ss", "hello1"))
-	log.Error("hello", zap.String("ss", "hello1"))
-	log.Info("hello", zap.String("ss", "hello1"))
-	log.Infof("hello %s", "1234")
-	log.Info("hello %s", xlog.M{
-		"test": "ok",
+	log.Info("hello1", zap.String("ss", "hello1"))
+	log.Error("hello1", zap.String("ss", "hello1"))
+	log.Info("hello1", zap.String("ss", "hello1"))
+	log.Infof("hello1 %s", "1234")
+	log.Info("hello1 %s", xlog.M{
+		"test1": "ok",
 	})
-	log.Warn("test")
+	log.Warn("test1")
 	log.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
@@ -90,7 +95,7 @@ func initCfgFromJson() {
         "outputPaths": ["stderr"],
         "errorOutputPaths": ["stderr"],
         "initialFields": {"hello":"world"},
-		"filterSuffix":["test.12345"]
+		"filterSuffix":["test1.12345"]
 }`
 
 	var cfg1 xlog_config.Config
@@ -98,8 +103,7 @@ func initCfgFromJson() {
 	cfg1.Encoding = "console"
 	//cfg1.Encoding = "json"
 	zl, err := cfg1.Build()
-
 	xerror.Exit(err)
 	xerror.Exit(xlog.SetDefault(zl))
-	log.Warn("test")
+	zl.Info("test config")
 }

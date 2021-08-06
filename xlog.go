@@ -1,19 +1,18 @@
 package xlog
 
 import (
+	"context"
 	"fmt"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type xlog struct {
-	name string
 	zl   *zap.Logger
 	lvl  zapcore.Level
 	opts []zap.Option
 }
-
-func (t *xlog) Zap() *zap.Logger { return t.zl }
 
 func (t *xlog) PrintM(m M) {
 	var fields = make([]zap.Field, 0, len(m))
@@ -28,12 +27,12 @@ func (t *xlog) Printf(format string, v ...interface{}) {
 }
 
 func (t *xlog) Print(args ...interface{}) {
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Check(t.lvl, msg).Write(fields...)
 }
 
 func (t *xlog) Println(args ...interface{}) {
-	msg, fields := fields(append(args, "\n")...)
+	msg, fields := fields(append(args, "\n"))
 	t.zl.Check(t.lvl, msg).Write(fields...)
 }
 
@@ -98,7 +97,7 @@ func (t *xlog) Debug(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Debug(msg, fields...)
 }
 
@@ -107,7 +106,7 @@ func (t *xlog) Info(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Info(msg, fields...)
 }
 
@@ -116,7 +115,7 @@ func (t *xlog) Warn(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Warn(msg, fields...)
 }
 
@@ -125,7 +124,7 @@ func (t *xlog) Error(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Error(msg, fields...)
 }
 
@@ -134,7 +133,7 @@ func (t *xlog) DPanic(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.DPanic(msg, fields...)
 }
 
@@ -143,7 +142,7 @@ func (t *xlog) Panic(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Panic(msg, fields...)
 }
 
@@ -152,7 +151,7 @@ func (t *xlog) Fatal(args ...interface{}) {
 		return
 	}
 
-	msg, fields := fields(args...)
+	msg, fields := fields(args)
 	t.zl.Fatal(msg, fields...)
 }
 
@@ -212,60 +211,40 @@ func (t *xlog) Fatalf(format string, a ...interface{}) {
 	t.zl.Fatal(fmt.Sprintf(format, a...))
 }
 
-func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
-	var xl = &xlog{
-		name: name,
-		opts: opts,
-		zl:   t.zl.Named(name).WithOptions(opts...),
-	}
-
-	//if name != "" {
-	//	if xl.name != "" {
-	//		xl.name = strings.Join([]string{t.name, name}, ".")
-	//	} else {
-	//		xl.name = name
-	//	}
-	//}
-
-	if name != "" {
-		loggerMap[xl.name] = xl
-	}
-
-	return xl
-}
-
-func fields(args ...interface{}) (string, []zap.Field) {
-	var msg = ""
+func fields(args []interface{}) (string, []zap.Field) {
+	var msg = "[xlog] known log msg"
 
 	if len(args) == 0 {
 		return msg, nil
 	}
 
 	var fields = make([]zap.Field, 0, len(args))
-	var fields1 = make([]interface{}, 0, len(args))
 	for i := range args {
 		field := args[i]
 		if field == nil {
 			continue
 		}
 
-		if f, ok := field.(zap.Field); ok {
+		switch f := field.(type) {
+		case zap.Field:
 			fields = append(fields, f)
-			continue
-		}
-
-		if f, ok := field.(M); ok {
+		case M:
 			for k, v := range f {
 				fields = append(fields, zap.Any(k, v))
 			}
-			continue
+		case context.Context:
+			var val, ok = f.Value(ctxKey{}).([]zap.Field)
+			if ok {
+				fields = append(fields, val...)
+			}
+		case string:
+			msg = f
+		case error:
+			fields = append(fields, zap.String("error", f.Error()))
+			fields = append(fields, zap.String("error_detail", fmt.Sprintf("%v", f)))
+		default:
+			msg = fmt.Sprintf("%s=>[%#v]", msg, f)
 		}
-
-		fields1 = append(fields1, field)
-	}
-
-	if len(fields1) > 0 {
-		msg = fmt.Sprint(fields1...)
 	}
 
 	return msg, fields

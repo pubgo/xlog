@@ -1,9 +1,5 @@
 package xlog
 
-import (
-	"go.uber.org/zap"
-)
-
 type M map[string]interface{}
 type Xlog interface {
 	Debug(args ...interface{})
@@ -29,9 +25,6 @@ type Xlog interface {
 	Panicf(format string, a ...interface{})
 	Fatalf(format string, a ...interface{})
 	DPanicf(format string, a ...interface{})
-
-	Named(name string, opts ...zap.Option) Xlog
-	Zap() *zap.Logger
 }
 
 type Logger interface {
