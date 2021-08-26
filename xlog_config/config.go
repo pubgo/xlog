@@ -10,6 +10,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+var globalLevel *zap.AtomicLevel
+
 type option func(opts *Config)
 
 type encoderConfig struct {
@@ -62,6 +64,9 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 	var dt = xerror.PanicBytes(json.Marshal(&t))
 	xerror.Panic(json.Unmarshal(dt, &zapCfg))
 
+	// 保留全局log level
+	globalLevel = &zapCfg.Level
+
 	key := internal.Default(t.EncoderConfig.EncodeLevel, defaultKey)
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
 
@@ -83,11 +88,7 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 
 	var log = xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger)
 	log = log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return &filterCore{
-			Core:         core,
-			filterPrefix: t.FilterPrefix,
-			filterSuffix: t.FilterSuffix,
-		}
+		return &filterCore{Core: core, filterPrefix: t.FilterPrefix, filterSuffix: t.FilterSuffix}
 	}))
 
 	return log, nil

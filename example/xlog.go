@@ -41,6 +41,10 @@ func main() {
 		log.Print("ok")
 	})
 
+	log.Named("kkkkkk").Info("hello")
+	log.Named("123").Info("hello")
+	log.Named("456").Info("hello")
+
 	initCfgFromJson()
 
 	fmt.Printf("ok-----------------------------------------\n\n")
@@ -65,12 +69,16 @@ func main() {
 	log.InfoW(func(log xlog.Logger) {
 		log.Print("ok")
 	})
-	log.Named("kkkkkk").Info("hello")
+
+	xlog_config.SetGlobalLevel(zap.InfoLevel)
+	log.Named("aakkkkkk").Info("hello")
+	log.Named("aa123").Info("hello")
+	log.Named("aa456").Info("hello")
 }
 
 func initCfgFromJson() {
 	cfg := `{
-        "level": "info",
+        "level": "error",
         "development": false,
         "disableCaller": false,
         "disableStacktrace": false,
@@ -96,7 +104,7 @@ func initCfgFromJson() {
         "outputPaths": ["stderr"],
         "errorOutputPaths": ["stderr"],
         "initialFields": {"hello":"world"},
-		"filterSuffix":["test1.12345"]
+		"filterSuffix":["kkkkkk","456"]
 }`
 
 	var cfg1 xlog_config.Config

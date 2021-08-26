@@ -7,6 +7,7 @@ import (
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/xlog_config"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var loggerMap sync.Map
@@ -46,6 +47,11 @@ func SetDefault(logger *zap.Logger) (err error) {
 	xerror.RespErr(&err)
 
 	xerror.Assert(logger == nil, "[logger] should not be nil")
+
+	logger = logger.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
+
+		return core
+	}))
 
 	// 替换zap默认log
 	zap.ReplaceGlobals(logger)
