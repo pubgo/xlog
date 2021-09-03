@@ -2,65 +2,94 @@ package xlog_config
 
 import (
 	"strings"
+	"sync"
 
 	"go.uber.org/zap/zapcore"
 )
 
+var globalMutex sync.RWMutex
+
 func SetGlobalLevel(l zapcore.Level) {
-	if globalLevel != nil {
-		globalLevel.SetLevel(l)
+	if globalLevel == nil {
+		return
 	}
+	globalLevel.SetLevel(l)
+}
+
+func hasPrefix(name string) bool {
+	globalMutex.RLock()
+	defer globalMutex.RUnlock()
+	for key := range globalPrefix {
+		if strings.HasPrefix(name, key) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasSuffix(name string) bool {
+	globalMutex.RLock()
+	defer globalMutex.RUnlock()
+	for key := range globalSuffix {
+		if strings.HasSuffix(name, key) {
+			return true
+		}
+	}
+	return false
+}
+
+func DelPrefix(key string) {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	delete(globalPrefix, key)
+}
+
+func SetPrefix(key string) {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	globalPrefix[key] = struct{}{}
+}
+
+func SetSuffix(key string) {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	globalSuffix[key] = struct{}{}
+}
+
+func DelSuffix(key string) {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+	delete(globalSuffix, key)
 }
 
 var _ zapcore.Core = (*filterCore)(nil)
 
 type filterCore struct {
-	filterPrefix []string
-	filterSuffix []string
 	zapcore.Core
 }
 
-func (t *filterCore) Enabled(lvl zapcore.Level) bool {
-	return t.Core.Enabled(lvl)
-}
+func (t *filterCore) xlog() {}
 
 func (t *filterCore) With(fields []zapcore.Field) zapcore.Core {
-	return &filterCore{Core: t.Core.With(fields), filterPrefix: t.filterPrefix, filterSuffix: t.filterSuffix}
+	var _, ok = t.Core.(interface{ xlog() })
+	if ok {
+		return t.Core.With(fields)
+	}
+
+	return &filterCore{Core: t.Core.With(fields)}
 }
 
 func (t *filterCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
-	for i := range t.filterPrefix {
-		if strings.HasPrefix(ent.LoggerName, t.filterPrefix[i]) {
-			return nil
-		}
-	}
-
-	for i := range t.filterSuffix {
-		if strings.HasSuffix(ent.LoggerName, t.filterSuffix[i]) {
-			return nil
-		}
+	if hasPrefix(ent.LoggerName) || hasSuffix(ent.LoggerName) {
+		return nil
 	}
 
 	return t.Core.Write(ent, fields)
 }
 
 func (t *filterCore) Check(ent zapcore.Entry, cc *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	var filter bool
-	for i := range t.filterPrefix {
-		if strings.HasPrefix(ent.LoggerName, t.filterPrefix[i]) {
-			filter = true
-			cc.AddCore(ent, t)
-		}
-	}
-
-	for i := range t.filterSuffix {
-		if strings.HasSuffix(ent.LoggerName, t.filterSuffix[i]) {
-			filter = true
-			cc.AddCore(ent, t)
-		}
-	}
-
-	if filter {
+	if hasPrefix(ent.LoggerName) || hasSuffix(ent.LoggerName) {
+		cc.AddCore(ent, t)
 		return cc
 	}
 

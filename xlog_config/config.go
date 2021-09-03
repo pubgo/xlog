@@ -2,15 +2,16 @@ package xlog_config
 
 import (
 	"encoding/json"
-	"sort"
-
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"sort"
 )
 
 var globalLevel *zap.AtomicLevel
+var globalPrefix = make(map[string]struct{})
+var globalSuffix = make(map[string]struct{})
 
 type option func(opts *Config)
 
@@ -66,6 +67,8 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 
 	// 保留全局log level
 	globalLevel = &zapCfg.Level
+	globalPrefix = internal.Set(t.FilterPrefix...)
+	globalSuffix = internal.Set(t.FilterSuffix...)
 
 	key := internal.Default(t.EncoderConfig.EncodeLevel, defaultKey)
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
@@ -88,7 +91,7 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 
 	var log = xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger)
 	log = log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return &filterCore{Core: core, filterPrefix: t.FilterPrefix, filterSuffix: t.FilterSuffix}
+		return &filterCore{Core: core}
 	}))
 
 	return log, nil

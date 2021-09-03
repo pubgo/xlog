@@ -6,3 +6,11 @@ func Default(a, b string) string {
 	}
 	return b
 }
+
+func Set(data ...string) map[string]struct{} {
+	var set = make(map[string]struct{})
+	for i := range data {
+		set[data[i]] = struct{}{}
+	}
+	return set
+}

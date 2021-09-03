@@ -3,12 +3,14 @@ package xlog
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type xlog struct {
+	name string
 	zl   *zap.Logger
 	lvl  zapcore.Level
 	opts []zap.Option
@@ -16,7 +18,7 @@ type xlog struct {
 
 func (t *xlog) Named(name string, opts ...zap.Option) Xlog {
 	var xl = &xlog{opts: opts, zl: t.zl.Named(name).WithOptions(opts...)}
-	loggerMap.Store(name, xl)
+	loggerMap.Store(strings.Join([]string{t.name, name}, "."), xl)
 	return xl
 }
 
