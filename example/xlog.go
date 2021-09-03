@@ -15,6 +15,7 @@ import (
 var log = xlog.GetLogger("test.12345", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
+	xlog.ErrWith("hello-error",fmt.Errorf("hello error"))
 	stdLog.Println("hello std")
 	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))

@@ -71,6 +71,14 @@ func SetDefault(logger *zap.Logger) (err error) {
 	return
 }
 
+func ErrWith(name string, err error) {
+	if err == nil {
+		return
+	}
+
+	GetLogger(name, zap.AddCallerSkip(1)).Error(err.Error(), zap.Any("error", err))
+}
+
 func Debug(args ...interface{})               { defaultLog.Debug(args...) }
 func Info(args ...interface{})                { defaultLog.Info(args...) }
 func Warn(args ...interface{})                { defaultLog.Warn(args...) }
