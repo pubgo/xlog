@@ -2,11 +2,12 @@ package xlog_config
 
 import (
 	"encoding/json"
+	"sort"
+
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog/internal"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"sort"
 )
 
 var globalLevel *zap.AtomicLevel

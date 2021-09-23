@@ -16,7 +16,11 @@ func SetGlobalLevel(l zapcore.Level) {
 	globalLevel.SetLevel(l)
 }
 
-func hasPrefix(name string) bool {
+func GetGlobalLevel() string {
+	return globalLevel.String()
+}
+
+func has(name string) bool {
 	globalMutex.RLock()
 	defer globalMutex.RUnlock()
 	for key := range globalPrefix {
@@ -24,18 +28,25 @@ func hasPrefix(name string) bool {
 			return true
 		}
 	}
-	return false
-}
 
-func hasSuffix(name string) bool {
-	globalMutex.RLock()
-	defer globalMutex.RUnlock()
 	for key := range globalSuffix {
 		if strings.HasSuffix(name, key) {
 			return true
 		}
 	}
+
 	return false
+}
+
+func GetPrefix() []string {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+
+	var p = make([]string, len(globalPrefix))
+	for k := range globalPrefix {
+		p = append(p, k)
+	}
+	return p
 }
 
 func DelPrefix(key string) {
@@ -48,6 +59,17 @@ func SetPrefix(key string) {
 	globalMutex.Lock()
 	defer globalMutex.Unlock()
 	globalPrefix[key] = struct{}{}
+}
+
+func GetSuffix() []string {
+	globalMutex.Lock()
+	defer globalMutex.Unlock()
+
+	var p = make([]string, len(globalSuffix))
+	for k := range globalSuffix {
+		p = append(p, k)
+	}
+	return p
 }
 
 func SetSuffix(key string) {
@@ -80,7 +102,7 @@ func (t *filterCore) With(fields []zapcore.Field) zapcore.Core {
 }
 
 func (t *filterCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
-	if hasPrefix(ent.LoggerName) || hasSuffix(ent.LoggerName) {
+	if has(ent.LoggerName) {
 		return nil
 	}
 
@@ -88,7 +110,7 @@ func (t *filterCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
 }
 
 func (t *filterCore) Check(ent zapcore.Entry, cc *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if hasPrefix(ent.LoggerName) || hasSuffix(ent.LoggerName) {
+	if has(ent.LoggerName) {
 		cc.AddCore(ent, t)
 		return cc
 	}
