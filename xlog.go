@@ -1,7 +1,6 @@
 package xlog
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -220,7 +219,7 @@ func (t *xlog) Fatalf(format string, a ...interface{}) {
 }
 
 func fields(args []interface{}) (string, []zap.Field) {
-	var msg = "[xlog] known log msg"
+	var msg = "[xlog] known logr msg"
 
 	if len(args) == 0 {
 		return msg, nil
@@ -240,16 +239,11 @@ func fields(args []interface{}) (string, []zap.Field) {
 			for k, v := range f {
 				fields = append(fields, zap.Any(k, v))
 			}
-		case context.Context:
-			var val, ok = f.Value(ctxKey{}).([]zap.Field)
-			if ok {
-				fields = append(fields, val...)
-			}
 		case string:
 			msg = f
 		case error:
-			fields = append(fields, zap.String("error", f.Error()))
-			fields = append(fields, zap.String("error_detail", fmt.Sprintf("%v", f)))
+			fields = append(fields, zap.String("err", f.Error()))
+			fields = append(fields, zap.Any("err_stack", f))
 		default:
 			msg = fmt.Sprintf("%s=>[%#v]", msg, f)
 		}

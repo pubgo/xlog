@@ -14,9 +14,10 @@ var defaultLog *xlog
 var defaultWLog *xlog
 
 func init() {
+	defer xerror.RespExit()
 	cfg := xlog_config.NewDevConfig()
 	cfg.EncoderConfig.EncodeCaller = "full"
-	var zapLog = xerror.ExitErr(cfg.Build()).(*zap.Logger)
+	var zapLog = cfg.Build("hello")
 	xerror.Exit(SetDefault(zapLog))
 }
 

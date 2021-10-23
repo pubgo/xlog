@@ -14,7 +14,7 @@ const (
 	DefaultRotateMaxAge               = 7 * 24 * time.Hour
 	DefaultRotateDuration             = 24 * time.Hour
 	DefaultRotatePattern              = ".%Y%m%d%H%M"
-	DefaultLogDir                     = "/data/log"
+	DefaultLogDir                     = "/data/logr"
 	DefaultLogSubDir                  = "info"
 	DefaultFileMode       os.FileMode = 0755
 )

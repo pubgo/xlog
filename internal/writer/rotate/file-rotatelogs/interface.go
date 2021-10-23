@@ -8,7 +8,7 @@ import (
 	strftime "github.com/lestrrat-go/strftime"
 )
 
-// RotateLogs represents a log file that gets
+// RotateLogs represents a logr file that gets
 // automatically rotated as you write to it.
 type RotateLogs struct {
 	clock         Clock

@@ -46,7 +46,7 @@ func WithLinkName(s string) Option {
 }
 
 // WithMaxAge creates a new Option that sets the
-// max age of a log file before it gets purged from
+// max age of a logr file before it gets purged from
 // the file system.
 func WithMaxAge(d time.Duration) Option {
 	return option.New(optkeyMaxAge, d)

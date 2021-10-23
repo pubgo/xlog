@@ -2,17 +2,35 @@ package xlog_config
 
 import (
 	"encoding/json"
-	"sort"
+	"fmt"
+	"path/filepath"
 
 	"github.com/pubgo/xerror"
-	"github.com/pubgo/xlog/internal"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/pubgo/xlog/internal"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
+var (
+	allLevels = []zapcore.Level{zapcore.DebugLevel, zapcore.InfoLevel, zapcore.WarnLevel, zapcore.ErrorLevel, zapcore.FatalLevel}
+)
+
+func GlobalLevel(l ...zapcore.Level) string {
+	if globalLevel == nil {
+		return ""
+	}
+
+	if len(l) > 0 {
+		return globalLevel.String()
+	}
+
+	globalLevel.SetLevel(l[0])
+	return l[0].String()
+}
+
 var globalLevel *zap.AtomicLevel
-var globalPrefix = make(map[string]struct{})
-var globalSuffix = make(map[string]struct{})
 
 type option func(opts *Config)
 
@@ -37,6 +55,15 @@ type samplingConfig struct {
 	Thereafter int `json:"thereafter" yaml:"thereafter" toml:"thereafter"`
 }
 
+type rotateCfg struct {
+	Filename   string `json:"filename" yaml:"filename"`
+	MaxSize    int    `json:"maxsize" yaml:"maxsize"`
+	MaxAge     int    `json:"maxage" yaml:"maxage"`
+	MaxBackups int    `json:"maxbackups" yaml:"maxbackups"`
+	LocalTime  bool   `json:"localtime" yaml:"localtime"`
+	Compress   bool   `json:"compress" yaml:"compress"`
+}
+
 type Config struct {
 	Level             string                 `json:"level" yaml:"level" toml:"level"`
 	Development       bool                   `json:"development" yaml:"development" toml:"development"`
@@ -48,8 +75,8 @@ type Config struct {
 	OutputPaths       []string               `json:"outputPaths" yaml:"outputPaths" toml:"outputPaths"`
 	ErrorOutputPaths  []string               `json:"errorOutputPaths" yaml:"errorOutputPaths" toml:"errorOutputPaths"`
 	InitialFields     map[string]interface{} `json:"initialFields" yaml:"initialFields" toml:"initialFields"`
-	FilterPrefix      []string               `json:"filterPrefix" yaml:"filterPrefix" toml:"filterPrefix"`
-	FilterSuffix      []string               `json:"filterSuffix" yaml:"filterSuffix" toml:"filterSuffix"`
+	Rotate            *rotateCfg             `json:"rotate" yaml:"rotate"`
+	SamplingHook      func(zapcore.Entry)    `json:"-" yaml:"-"`
 }
 
 func (t Config) handleOpts(opts ...option) Config {
@@ -59,26 +86,21 @@ func (t Config) handleOpts(opts ...option) Config {
 	return t
 }
 
-func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
-	defer xerror.RespErr(&err)
-
+func (t Config) Build(name string, opts ...zap.Option) (_ *zap.Logger) {
 	zapCfg := zap.Config{}
 	var dt = xerror.PanicBytes(json.Marshal(&t))
 	xerror.Panic(json.Unmarshal(dt, &zapCfg))
 
-	// 保留全局log level
+	// 保留全局log level, 用于后期动态修改
 	globalLevel = &zapCfg.Level
-	globalPrefix = internal.Set(t.FilterPrefix...)
-	globalSuffix = internal.Set(t.FilterSuffix...)
 
 	key := internal.Default(t.EncoderConfig.EncodeLevel, defaultKey)
 	zapCfg.EncoderConfig.EncodeLevel = levelEncoder[key]
 
 	key = internal.Default(t.EncoderConfig.EncodeTime, defaultKey)
 	zapCfg.EncoderConfig.EncodeTime = zapcore.TimeEncoderOfLayout(key)
-	var te, ok = timeEncoder[key]
-	if ok {
-		zapCfg.EncoderConfig.EncodeTime = te
+	if encoder, ok := timeEncoder[key]; ok {
+		zapCfg.EncoderConfig.EncodeTime = encoder
 	}
 
 	key = internal.Default(t.EncoderConfig.EncodeDuration, defaultKey)
@@ -90,12 +112,41 @@ func (t Config) Build(opts ...zap.Option) (_ *zap.Logger, err error) {
 	key = internal.Default(t.EncoderConfig.EncodeName, defaultKey)
 	zapCfg.EncoderConfig.EncodeName = nameEncoder[key]
 
-	var log = xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger)
-	log = log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-		return &filterCore{Core: core}
-	}))
+	// 采样hook设置
+	if t.SamplingHook != nil {
+		zapCfg.Sampling.Hook = func(entry zapcore.Entry, decision zapcore.SamplingDecision) {
+			if decision == zapcore.LogDropped {
+				return
+			}
 
-	return log, nil
+			t.SamplingHook(entry)
+		}
+	}
+
+	var log = xerror.PanicErr(zapCfg.Build(opts...)).(*zap.Logger)
+
+	if t.Rotate != nil {
+		var cores []zapcore.Core
+		for i := range allLevels {
+			lvl := allLevels[i]
+			var w = &lumberjack.Logger{
+				Filename:   filepath.Join(t.Rotate.Filename, lvl.String(), fmt.Sprintf("%s.log", name)),
+				MaxSize:    t.Rotate.MaxSize,
+				MaxBackups: t.Rotate.MaxBackups,
+				MaxAge:     t.Rotate.MaxAge,
+				Compress:   t.Rotate.Compress,
+			}
+
+			var cfg = zapCfg.EncoderConfig
+			cfg.EncodeLevel = zapcore.LowercaseLevelEncoder
+			cores = append(cores, zapcore.NewCore(
+				zapcore.NewJSONEncoder(cfg), zapcore.AddSync(w),
+				zap.LevelEnablerFunc(func(level zapcore.Level) bool { return level == lvl })))
+		}
+
+		log = log.WithOptions(zap.WrapCore(func(core zapcore.Core) zapcore.Core { return zapcore.NewTee(append(cores, core)...) }))
+	}
+	return log
 }
 
 func NewDevConfig(opts ...option) Config {
@@ -104,6 +155,13 @@ func NewDevConfig(opts ...option) Config {
 		Development:       true,
 		Encoding:          "console",
 		DisableStacktrace: true,
+		Rotate: &rotateCfg{
+			Filename:   "./logs",
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     28,
+			Compress:   false,
+		},
 		EncoderConfig: encoderConfig{
 			TimeKey:        "T",
 			LevelKey:       "L",
@@ -150,43 +208,5 @@ func NewProdConfig(opts ...option) Config {
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
 	}
-
 	return cfg.handleOpts(opts...)
-}
-
-// MergeOutputPaths merges logging output paths, resolving conflicts.
-func MergeOutputPaths(cfg zap.Config) zap.Config {
-	outputs := make(map[string]struct{})
-	for _, v := range cfg.OutputPaths {
-		outputs[v] = struct{}{}
-	}
-	outputSlice := make([]string, 0)
-	if _, ok := outputs["/dev/null"]; ok {
-		// "/dev/null" to discard all
-		outputSlice = []string{"/dev/null"}
-	} else {
-		for k := range outputs {
-			outputSlice = append(outputSlice, k)
-		}
-	}
-	cfg.OutputPaths = outputSlice
-	sort.Strings(cfg.OutputPaths)
-
-	errOutputs := make(map[string]struct{})
-	for _, v := range cfg.ErrorOutputPaths {
-		errOutputs[v] = struct{}{}
-	}
-	errOutputSlice := make([]string, 0)
-	if _, ok := errOutputs["/dev/null"]; ok {
-		// "/dev/null" to discard all
-		errOutputSlice = []string{"/dev/null"}
-	} else {
-		for k := range errOutputs {
-			errOutputSlice = append(errOutputSlice, k)
-		}
-	}
-	cfg.ErrorOutputPaths = errOutputSlice
-	sort.Strings(cfg.ErrorOutputPaths)
-
-	return cfg
 }

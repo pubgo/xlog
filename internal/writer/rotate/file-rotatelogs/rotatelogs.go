@@ -17,7 +17,7 @@ import (
 	strftime "github.com/lestrrat-go/strftime"
 )
 
-// New creates a new RotateLogs object. A log filename pattern
+// New creates a new RotateLogs object. A logr filename pattern
 // must be passed. Optional `Option` parameters may be passed
 func New(p string, options ...Option) (*RotateLogs, error) {
 	globPattern := p
@@ -124,7 +124,7 @@ func (rl *RotateLogs) getWriter_nolock(bailOnRotateFail, useGenerationalNames bo
 	generation := rl.generation
 
 	// This filename contains the name of the "NEW" filename
-	// to log to, which may be newer than rl.currentFilename
+	// to logr to, which may be newer than rl.currentFilename
 	filename := rl.genFilename()
 	if rl.curFn != filename {
 		generation = 0
@@ -133,7 +133,7 @@ func (rl *RotateLogs) getWriter_nolock(bailOnRotateFail, useGenerationalNames bo
 			// nothing to do
 			return rl.outFh, nil
 		}
-		// This is used when we *REALLY* want to rotate a log.
+		// This is used when we *REALLY* want to rotate a logr.
 		// instead of just using the regular strftime pattern, we
 		// create a new file name using generational names such as
 		// "foo.1", "foo.2", "foo.3", etc
@@ -158,7 +158,7 @@ func (rl *RotateLogs) getWriter_nolock(bailOnRotateFail, useGenerationalNames bo
 		if bailOnRotateFail {
 			// Failure to rotate is a problem, but it's really not a great
 			// idea to stop your application just because you couldn't rename
-			// your log.
+			// your logr.
 			// We only return this error when explicitly needed.
 			return nil, err
 		}
@@ -203,12 +203,12 @@ func (g *cleanupGuard) Run() {
 	g.fn()
 }
 
-// Rotate forcefully rotates the log files. If the generated file name
+// Rotate forcefully rotates the logr files. If the generated file name
 // clash because file already exists, a numeric suffix of the form
-// ".1", ".2", ".3" and so forth are appended to the end of the log file
+// ".1", ".2", ".3" and so forth are appended to the end of the logr file
 //
 // Thie method can be used in conjunction with a signal handler so to
-// emulate servers that generate new log files when they receive a
+// emulate servers that generate new logr files when they receive a
 // SIGHUP
 func (rl *RotateLogs) Rotate() error {
 	rl.mutex.Lock()

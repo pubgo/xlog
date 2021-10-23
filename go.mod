@@ -15,10 +15,12 @@ require (
 	github.com/pubgo/xerror v0.4.1
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/tebeka/strftime v0.1.5 // indirect
-	github.com/uber/jaeger-client-go v2.25.0+incompatible
+	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.0+incompatible // indirect
+	github.com/wk30/zaplogman v0.0.0-20210514055149-83534d3b20d7
 	go.uber.org/zap v1.17.0
-	google.golang.org/grpc v1.36.0
+	google.golang.org/grpc v1.36.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

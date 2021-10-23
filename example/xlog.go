@@ -1,28 +1,26 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	stdLog "log"
-
 	"github.com/pubgo/xerror"
 	"github.com/pubgo/xlog"
 	"github.com/pubgo/xlog/xlog_config"
 	"go.uber.org/zap"
+	stdLog "log"
 )
 
 var log = xlog.GetLogger("test.12345", zap.Fields(zap.String("name", "test_hello")))
 
 func main() {
-	xlog.ErrWith("hello-error",fmt.Errorf("hello error"))
+	xlog.ErrWith("hello-error", fmt.Errorf("hello error"))
 	stdLog.Println("hello std")
 	zap.L().Info("hello test")
 	xlog.Info("hello", zap.String("ss", "hello1"))
+	xlog.Debug("hello", zap.String("ss", "hello1"))
 	xlog.Info(fmt.Sprintf)
 	xlog.Info(fmt.Sprintf, zap.Logger{})
 	xlog.Info(fmt.Sprintf, xerror.Wrap(xerror.Fmt("hello")))
-	xlog.Info("hello", xlog.AppendCtx(context.Background(), zap.String("kkk", "sss")))
 	xlog.Error("hello", zap.String("ss", "hello1"))
 	xlog.Info("hello %s", xlog.M{
 		"test": "ok",
@@ -71,13 +69,14 @@ func main() {
 		log.Print("ok")
 	})
 
-	xlog_config.SetGlobalLevel(zap.InfoLevel)
+	xlog_config.GlobalLevel(zap.InfoLevel)
 	log.Named("aakkkkkk").Info("hello")
 	log.Named("aa123").Info("hello")
 	log.Named("aa456").Info("hello")
 }
 
 func initCfgFromJson() {
+	defer xerror.RespExit()
 	cfg := `{
         "level": "error",
         "development": false,
@@ -104,16 +103,14 @@ func initCfgFromJson() {
         },
         "outputPaths": ["stderr"],
         "errorOutputPaths": ["stderr"],
-        "initialFields": {"hello":"world"},
-		"filterSuffix":["kkkkkk","456"]
+        "initialFields": {"hello":"world"}
 }`
 
 	var cfg1 xlog_config.Config
 	xerror.Exit(json.Unmarshal([]byte(cfg), &cfg1))
 	cfg1.Encoding = "console"
 	//cfg1.Encoding = "json"
-	zl, err := cfg1.Build()
-	xerror.Exit(err)
+	zl := cfg1.Build("hello")
 	xerror.Exit(xlog.SetDefault(zl))
 	zl.Info("test config")
 }

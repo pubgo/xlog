@@ -1,15 +1,11 @@
 package xlog_config
 
 import (
-	"fmt"
 	"net/url"
-	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pubgo/xerror"
-	"github.com/pubgo/xlog/internal/writer/rotate"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -58,8 +54,8 @@ var (
 		},
 	}
 	sinkFactories = map[string]func(*url.URL) (zap.Sink, error){
-		"rotate": newRotateSink,
-		"file":   newFileSink,
+		//"rotate": newRotateSink,
+		//"file":   newFileSink,
 	}
 )
 
@@ -81,120 +77,6 @@ func init() {
 	}
 }
 
-// http://xlog.api/log
-func newHttpSink(u *url.URL) (zap.Sink, error) {
-	if u.User != nil {
-		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
-	}
-	if u.Fragment != "" {
-		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
-	}
-	if u.RawQuery != "" {
-		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
-	}
-	// Error messages are better if we check hostname and port separately.
-	if u.Port() != "" {
-		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
-	}
-	if hn := u.Hostname(); hn != "" && hn != "localhost" {
-		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
-	}
-
-	query := u.Query()
-	var cfg = rotate.NewWriterConfig()
-	for k := range query {
-		v := query.Get(k)
-		switch k {
-		case "dir":
-			cfg.Dir = v
-		case "sub":
-			cfg.Sub = v
-		case "name":
-			cfg.Filename = v
-		case "age":
-			cfg.Age = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
-		case "dur":
-			cfg.Duration = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
-		case "pattern":
-			cfg.Pattern = v
-		case "count":
-			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
-		}
-	}
-
-	w, err := rotate.NewRotateLogger(cfg)
-	return &nopCloserSink{zapcore.AddSync(w)}, err
-}
-
-// rotate:///hello.go
-func newRotateSink(u *url.URL) (zap.Sink, error) {
-	if u.User != nil {
-		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
-	}
-	if u.Fragment != "" {
-		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
-	}
-	if u.RawQuery != "" {
-		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
-	}
-	// Error messages are better if we check hostname and port separately.
-	if u.Port() != "" {
-		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
-	}
-	if hn := u.Hostname(); hn != "" && hn != "localhost" {
-		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
-	}
-
-	query := u.Query()
-	var cfg = rotate.NewWriterConfig()
-	for k := range query {
-		v := query.Get(k)
-		switch k {
-		case "dir":
-			cfg.Dir = v
-		case "sub":
-			cfg.Sub = v
-		case "name":
-			cfg.Filename = v
-		case "age":
-			cfg.Age = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
-		case "dur":
-			cfg.Duration = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
-		case "pattern":
-			cfg.Pattern = v
-		case "count":
-			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
-		}
-	}
-
-	w, err := rotate.NewRotateLogger(cfg)
-	return &nopCloserSink{zapcore.AddSync(w)}, err
-}
-
-func newFileSink(u *url.URL) (_ zap.Sink, err error) {
-	defer xerror.RespErr(&err)
-
-	xerror.Assert(u.User != nil, "user and password not allowed with file URLs: got %v", u)
-	xerror.Assert(u.Fragment != "", "fragments not allowed with file URLs: got %v", u)
-	xerror.Assert(u.RawQuery != "", "query parameters not allowed with file URLs: got %v", u)
-
-	// Error messages are better if we check hostname and port separately.
-	xerror.Assert(u.Port() != "", "ports not allowed with file URLs: got %v", u)
-
-	hn := u.Hostname()
-	xerror.Assert(hn != "" && hn != "localhost", "file URLs must leave host empty or use localhost: got %v", u)
-
-	switch u.Path {
-	case "stdout":
-		return nopCloserSink{os.Stdout}, nil
-	case "stderr":
-		return nopCloserSink{os.Stderr}, nil
-	}
-
-	u.Path = os.ExpandEnv(u.Path)
-	return os.OpenFile(u.Path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
-}
-
 func _RFC3339MilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	type appendTimeEncoder interface {
 		AppendTimeLayout(time.Time, string)
@@ -208,6 +90,126 @@ func _RFC3339MilliTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format("2006-01-02T15:04:05.000Z07:00"))
 }
 
-type nopCloserSink struct{ zapcore.WriteSyncer }
+//func getWriter(outputPath string, rotateTime string, maxAge int64, name string, cfg *rotateCfg) (writer io.Writer, err error) {
+//	var logName = fmt.Sprintf("%s.%s.%s", name, cfg.Format, cfg.Ext)
+//	outputPath = outputPath + string(os.PathSeparator)
+//	rotateDuration, err := time.ParseDuration(rotateTime)
+//	writer, err = rotatelogs.New(filepath.Join(outputPath, logName),
+//		rotatelogs.WithRotationTime(rotateDuration), rotatelogs.WithMaxAge(time.Duration(maxAge)*rotateDuration),
+//		rotatelogs.WithLinkName(filepath.Join(outputPath, fmt.Sprintf("%s.%s", name, cfg.Ext))))
+//	return
+//}
 
-func (t nopCloserSink) Close() error { return nil }
+// http://xlog.api/log
+//func newHttpSink(u *url.URL) (zap.Sink, error) {
+//	if u.User != nil {
+//		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
+//	}
+//	if u.Fragment != "" {
+//		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
+//	}
+//	if u.RawQuery != "" {
+//		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
+//	}
+//	// Error messages are better if we check hostname and port separately.
+//	if u.Port() != "" {
+//		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
+//	}
+//	if hn := u.Hostname(); hn != "" && hn != "localhost" {
+//		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
+//	}
+//
+//	query := u.Query()
+//	var cfg = rotate.NewWriterConfig()
+//	for k := range query {
+//		v := query.Get(k)
+//		switch k {
+//		case "dir":
+//			cfg.Dir = v
+//		case "sub":
+//			cfg.Sub = v
+//		case "name":
+//			cfg.Filename = v
+//		case "age":
+//			cfg.Age = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+//		case "dur":
+//			cfg.Duration = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+//		case "pattern":
+//			cfg.Pattern = v
+//		case "count":
+//			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
+//		}
+//	}
+//
+//	w, err := rotate.NewRotateLogger(cfg)
+//	return &nopCloserSink{zapcore.AddSync(w)}, err
+//}
+
+// rotate:///logPath
+//func newRotateSink(u *url.URL) (zap.Sink, error) {
+//	if u.User != nil {
+//		return nil, fmt.Errorf("user and password not allowed with file URLs: got %v", u)
+//	}
+//	if u.Fragment != "" {
+//		return nil, fmt.Errorf("fragments not allowed with file URLs: got %v", u)
+//	}
+//	if u.RawQuery != "" {
+//		return nil, fmt.Errorf("query parameters not allowed with file URLs: got %v", u)
+//	}
+//	// Error messages are better if we check hostname and port separately.
+//	if u.Port() != "" {
+//		return nil, fmt.Errorf("ports not allowed with file URLs: got %v", u)
+//	}
+//	if hn := u.Hostname(); hn != "" && hn != "localhost" {
+//		return nil, fmt.Errorf("file URLs must leave host empty or use localhost: got %v", u)
+//	}
+//
+//	query := u.Query()
+//	var cfg = rotate.NewWriterConfig()
+//	for k := range query {
+//		v := query.Get(k)
+//		switch k {
+//		case "dir":
+//			cfg.Dir = v
+//		case "sub":
+//			cfg.Sub = v
+//		case "name":
+//			cfg.Filename = v
+//		case "age":
+//			cfg.Age = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+//		case "dur":
+//			cfg.Duration = xerror.PanicErr(time.ParseDuration(v)).(time.Duration)
+//		case "pattern":
+//			cfg.Pattern = v
+//		case "count":
+//			cfg.Count = uint(xerror.PanicErr(strconv.Atoi(v)).(int))
+//		}
+//	}
+//
+//	w, err := rotate.NewRotateLogger(cfg)
+//	return &nopCloserSink{zapcore.AddSync(w)}, err
+//}
+
+//func newFileSink(u *url.URL) (_ zap.Sink, err error) {
+//	defer xerror.RespErr(&err)
+//
+//	xerror.Assert(u.User != nil, "user and password not allowed with file URLs: got %v", u)
+//	xerror.Assert(u.Fragment != "", "fragments not allowed with file URLs: got %v", u)
+//	xerror.Assert(u.RawQuery != "", "query parameters not allowed with file URLs: got %v", u)
+//
+//	// Error messages are better if we check hostname and port separately.
+//	xerror.Assert(u.Port() != "", "ports not allowed with file URLs: got %v", u)
+//
+//	hn := u.Hostname()
+//	xerror.Assert(hn != "" && hn != "localhost", "file URLs must leave host empty or use localhost: got %v", u)
+//
+//	switch u.Path {
+//	case "stdout":
+//		return nopCloserSink{os.Stdout}, nil
+//	case "stderr":
+//		return nopCloserSink{os.Stderr}, nil
+//	}
+//
+//	u.Path = os.ExpandEnv(u.Path)
+//	return os.OpenFile(u.Path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+//}
